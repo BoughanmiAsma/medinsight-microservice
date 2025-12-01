@@ -11,7 +11,12 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  TextField
+  TextField,
+  Toolbar,
+  Container,
+  CircularProgress,
+  Alert,
+  Snackbar
 } from "@mui/material";
 
 import { DataGrid } from "@mui/x-data-grid";
@@ -22,6 +27,7 @@ import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 
 import { useNavigate } from "react-router-dom";
+import Appbar from "../../components/Appbar";
 
 export default function StaffList() {
   const navigate = useNavigate();
@@ -29,9 +35,23 @@ export default function StaffList() {
   const [search, setSearch] = useState("");
   const [openDelete, setOpenDelete] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" as "success" | "error" });
 
   const load = () => {
-    getAllStaffs().then((res) => setRows(res.data));
+    setLoading(true);
+    setError(null);
+    getAllStaffs()
+      .then((res) => {
+        setRows(res.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError("Erreur lors du chargement des staffs");
+        setLoading(false);
+        console.error(err);
+      });
   };
 
   useEffect(() => {
@@ -45,10 +65,18 @@ export default function StaffList() {
   );
 
   const handleDelete = () => {
-    deleteStaff(selectedId!).then(() => {
-      setOpenDelete(false);
-      load();
-    });
+    if (!selectedId) return;
+    
+    deleteStaff(selectedId)
+      .then(() => {
+        setOpenDelete(false);
+        setSnackbar({ open: true, message: "Staff supprimé avec succès", severity: "success" });
+        load();
+      })
+      .catch((err) => {
+        setSnackbar({ open: true, message: "Erreur lors de la suppression", severity: "error" });
+        console.error(err);
+      });
   };
 
   const typeColor = (t: string) => {
@@ -106,50 +134,86 @@ export default function StaffList() {
   ];
 
   return (
-    <Box>
+    <Box sx={{ display: "flex" }}>
+      <Appbar appBarTitle="Staff Management" />
+      <Box
+        component="main"
+        sx={{
+          backgroundColor: (theme) =>
+            theme.palette.mode === "light"
+              ? theme.palette.grey[100]
+              : theme.palette.grey[900],
+          flexGrow: 1,
+          height: "100vh",
+          overflow: "auto"
+        }}
+      >
+        <Toolbar />
+        <Container sx={{ mt: 4, mb: 4 }}>
+          <Stack direction="row" justifyContent="flex-end" mb={2}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => navigate("/staff/add")}
+            >
+              Ajouter un Staff
+            </Button>
+          </Stack>
 
-      <Stack direction="row" justifyContent="space-between" mb={2}>
-        <Typography variant="h4" fontWeight={600}>Staff Management</Typography>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+              {error}
+            </Alert>
+          )}
 
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => navigate("/staff/add")}
-        >
-          Ajouter un Staff
-        </Button>
-      </Stack>
+          <TextField
+            fullWidth
+            placeholder="Rechercher un staff..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            InputProps={{ startAdornment: <SearchIcon /> }}
+            sx={{ mb: 2 }}
+          />
 
-      <TextField
-        fullWidth
-        placeholder="Rechercher un staff..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        InputProps={{ startAdornment: <SearchIcon /> }}
-        sx={{ mb: 2 }}
-      />
+          {loading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: 400 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <Box sx={{ height: 550 }}>
+              <DataGrid
+                rows={filteredRows}
+                columns={columns}
+                pageSize={10}
+                rowsPerPageOptions={[5, 10, 20]}
+                disableSelectionOnClick
+              />
+            </Box>
+          )}
 
-<Box sx={{ height: 550 }}>
-  <DataGrid
-    rows={filteredRows}
-    columns={columns}
-    pageSize={10}                // ✔ v5 compatible
-    rowsPerPageOptions={[5, 10, 20]} 
-    disableSelectionOnClick
-  />
-</Box>
+          {/* Delete Dialog */}
+          <Dialog open={openDelete} onClose={() => setOpenDelete(false)}>
+            <DialogTitle>Supprimer</DialogTitle>
+            <DialogContent>Voulez-vous vraiment supprimer ce staff ?</DialogContent>
 
+            <DialogActions>
+              <Button onClick={() => setOpenDelete(false)}>Annuler</Button>
+              <Button color="error" onClick={handleDelete}>Supprimer</Button>
+            </DialogActions>
+          </Dialog>
 
-      {/* Delete Dialog */}
-      <Dialog open={openDelete} onClose={() => setOpenDelete(false)}>
-        <DialogTitle>Supprimer</DialogTitle>
-        <DialogContent>Voulez-vous vraiment supprimer ce staff ?</DialogContent>
-
-        <DialogActions>
-          <Button onClick={() => setOpenDelete(false)}>Annuler</Button>
-          <Button color="error" onClick={handleDelete}>Supprimer</Button>
-        </DialogActions>
-      </Dialog>
+          {/* Snackbar for notifications */}
+          <Snackbar
+            open={snackbar.open}
+            autoHideDuration={6000}
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+          >
+            <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: "100%" }}>
+              {snackbar.message}
+            </Alert>
+          </Snackbar>
+        </Container>
+      </Box>
     </Box>
   );
 }

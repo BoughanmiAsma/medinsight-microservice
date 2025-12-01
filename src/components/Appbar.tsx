@@ -127,7 +127,7 @@ export default function Appbar(props: { appBarTitle: string }) {
         >
           <Typography variant="h4" align="center">
             <img src="hospital.svg" height="40px" />
-            <span style={{ color: "#005B93" }}>EALTHY</span>
+            <span style={{ color: "#005B93" }}>MEDLNSIGHT</span>
           </Typography>
           <IconButton onClick={toggleDrawer}>
             <ChevronLeftIcon />
