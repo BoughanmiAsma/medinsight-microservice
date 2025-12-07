@@ -1,0 +1,49 @@
+{
+  "realm": "microservices-realm",
+  "enabled": true,
+
+  "roles": {
+    "realm": [
+      { "name": "ROLE_ADMIN" },
+      { "name": "ROLE_MEDECIN" },
+      { "name": "ROLE_SECRETAIRE" },
+      { "name": "ROLE_INFIRMIER" },
+      { "name": "ROLE_TECHNICIEN" },
+      { "name": "ROLE_AIDE_SOIGNANT" }
+    ]
+  },
+
+  "users": [
+    {
+      "username": "admin1",
+      "email": "admin@local",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Admin123!"
+        }
+      ],
+      "realmRoles": [
+        "ROLE_ADMIN"
+      ]
+    }
+  ],
+
+  "clients": [
+    {
+      "clientId": "staff-service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "CHANGE_ME_CLIENT_SECRET",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "protocol": "openid-connect",
+      "redirectUris": [],
+      "attributes": {
+        "access.token.lifespan": "300"
+      }
+    }
+  ]
+}

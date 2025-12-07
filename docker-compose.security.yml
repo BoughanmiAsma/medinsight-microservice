@@ -1,0 +1,189 @@
+version: '3.8'
+
+networks:
+  medinsight-security:
+    driver: bridge
+
+
+  microservices-net:
+    external: true
+
+
+
+volumes:
+  keycloak_data:
+  kong_data:
+
+services:
+  # ==================== KEYCLOAK DATABASE ====================
+  keycloak-db:
+    image: postgres:15
+    container_name: keycloak-db1
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - keycloak_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - medinsight-security
+      - microservices-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ==================== KEYCLOAK ====================
+  keycloak:
+    image: quay.io/keycloak/keycloak:21.1.1
+    container_name: keycloak1
+    environment:
+      KC_DB: postgres
+      KC_DB_URL_HOST: keycloak-db
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN_USER}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+
+      #KC_HOSTNAME: ${KEYCLOAK_HOSTNAME:-localhost}
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_PROXY: "edge"
+
+      KC_HTTP_ENABLED: "true"
+      KC_HTTP_PORT: 8180
+
+      KC_FEATURES: "scripts,authorization,client-policies,token-exchange"
+      KC_LOG_LEVEL: INFO
+      KC_METRICS_ENABLED: "true"
+
+      KC_IMPORT: /opt/keycloak/data/import/medinsight-realm.json
+    command: 
+        - start-dev
+        #- --import-realm
+    ports:
+      - "8180:8180"
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    volumes:
+      - ./keycloak/realms:/opt/keycloak/data/import
+      #- ./keycloak/themes:/opt/keycloak/themes
+    networks:
+      - medinsight-security
+      - microservices-net
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8180/health/ready" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+
+  # ==================== KONG DATABASE ====================
+  kong-db:
+    image: postgres:15
+    container_name: kong-db1
+    environment:
+      POSTGRES_DB: kong
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: ${KONG_DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    networks:
+      - medinsight-security
+      - microservices-net
+    volumes:
+      - kong_data:/var/lib/postgresql/data
+      - ./postgres/kong-init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kong -d kong"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ==================== KONG MIGRATIONS ====================
+  kong-migrations:
+    image: kong:3.6
+    command: "kong migrations bootstrap"
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-db
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: ${KONG_DB_PASSWORD}
+      KONG_PASSWORD: ${KONG_ADMIN_PASSWORD}
+    depends_on:
+      kong-db:
+        condition: service_healthy
+    networks:
+      - medinsight-security
+      - microservices-net
+
+    profiles: ["setup"]
+
+  # ==================== KONG ====================
+  kong:
+    image: kong:3.6
+    container_name: kong1
+    restart: always
+    environment:
+      # Database Configuration
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-db
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: ${KONG_DB_PASSWORD}
+      KONG_PASSWORD: ${KONG_ADMIN_PASSWORD}
+
+      # Declarative Config
+      KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
+
+      # Logging
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_LOG_LEVEL: info
+
+      # Security
+      KONG_ADMIN_GUI_AUTH: basic-auth
+      KONG_ADMIN_GUI_SESSION_CONF: '{"secret":"${KONG_SESSION_SECRET}"}'
+      KONG_ADMIN_GUI_CSRF_PROTECTION: "true"
+
+      # Network
+      KONG_PROXY_LISTEN: "0.0.0.0:8200"
+      KONG_ADMIN_LISTEN: "0.0.0.0:8201"
+      KONG_ADMIN_GUI_LISTEN: "0.0.0.0:8203"
+      KONG_STATUS_LISTEN: "0.0.0.0:8204"
+
+      # Features
+      KONG_PLUGINS: "bundled,bot-detection,rate-limiting,acl,key-auth,request-transformer"
+      KONG_MEM_CACHE_SIZE: 128m
+    ports:
+      - "8200:8000"   # Proxy
+      - "8201:8001"   # Admin API
+      - "8203:8002"   # Kong Manager
+      - "8100:8204"   # Status
+    volumes:
+      - ./kong/kong.yml:/etc/kong/kong.yml:ro
+      - ./kong/plugins:/etc/kong/plugins:ro
+    depends_on:
+      kong-db:
+        condition: service_healthy
+    networks:
+      - medinsight-security
+      - microservices-net
+    healthcheck:
+      test: [ "CMD", "kong", "health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
