@@ -4,6 +4,9 @@
   "description": "",
   "keywords": [],
   "main": "src/index.tsx",
+
+  "proxy": "http://localhost:9002",
+
   "dependencies": {
     "@emotion/react": "^11.10.6",
     "@emotion/styled": "^11.10.6",

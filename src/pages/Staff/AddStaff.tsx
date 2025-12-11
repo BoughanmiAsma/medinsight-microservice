@@ -1,4 +1,13 @@
-import { Grid, Box, Toolbar, Container, Button, CircularProgress, Alert, Snackbar } from "@mui/material";
+import {
+  Grid,
+  Box,
+  Toolbar,
+  Container,
+  Button,
+  CircularProgress,
+  Alert,
+  Snackbar,
+} from "@mui/material";
 import { createStaff, Staff } from "../../api/staffApi";
 import StaffForm from "../../components/StaffForm";
 import { useNavigate } from "react-router-dom";
@@ -10,27 +19,42 @@ export default function AddStaff() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" as "success" | "error" });
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>({ open: false, message: "", severity: "success" });
 
-  const handleSubmit = (data: Staff) => {
-    setLoading(true);
-    setError(null);
-    createStaff(data)
-      .then(() => {
-        setSnackbar({ open: true, message: "Staff ajouté avec succès", severity: "success" });
-        setTimeout(() => navigate("/staff"), 1500);
-      })
-      .catch((err) => {
-        setError("Erreur lors de l'ajout du staff");
-        setSnackbar({ open: true, message: "Erreur lors de l'ajout du staff", severity: "error" });
-        setLoading(false);
-        console.error(err);
+  const handleSubmit = async (data: Staff) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      await createStaff(data);
+
+      setSnackbar({
+        open: true,
+        message: "Staff ajouté avec succès",
+        severity: "success",
       });
+
+      setTimeout(() => navigate("/staff"), 1200);
+    } catch (err) {
+      console.error(err);
+      setError("Erreur lors de l'ajout du staff");
+      setSnackbar({
+        open: true,
+        message: "Erreur lors de l'ajout du staff",
+        severity: "error",
+      });
+      setLoading(false);
+    }
   };
 
   return (
     <Box sx={{ display: "flex" }}>
       <Appbar appBarTitle="Ajouter un Staff" />
+
       <Box
         component="main"
         sx={{
@@ -40,7 +64,7 @@ export default function AddStaff() {
               : theme.palette.grey[900],
           flexGrow: 1,
           height: "100vh",
-          overflow: "auto"
+          overflow: "auto",
         }}
       >
         <Toolbar />
@@ -64,7 +88,14 @@ export default function AddStaff() {
 
             <Grid item xs={12}>
               {loading ? (
-                <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: 400 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: 400,
+                  }}
+                >
                   <CircularProgress />
                 </Box>
               ) : (
@@ -73,13 +104,16 @@ export default function AddStaff() {
             </Grid>
           </Grid>
 
-          {/* Snackbar for notifications */}
           <Snackbar
             open={snackbar.open}
-            autoHideDuration={6000}
+            autoHideDuration={5000}
             onClose={() => setSnackbar({ ...snackbar, open: false })}
           >
-            <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: "100%" }}>
+            <Alert
+              onClose={() => setSnackbar({ ...snackbar, open: false })}
+              severity={snackbar.severity}
+              sx={{ width: "100%" }}
+            >
               {snackbar.message}
             </Alert>
           </Snackbar>

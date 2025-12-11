@@ -15,50 +15,47 @@ import Calender from "./pages/Calender/Calender";
 import Kanban from "./pages/Kanban/Kanban";
 import Account from "./pages/Account/Account";
 import Settings from "./pages/Settings/Settings";
+import Help from "./pages/Help/Help";
 import { mockPatientData } from "./mockData";
+
 import StaffList from "./pages/Staff/StaffList";
 import AddStaff from "./pages/Staff/AddStaff";
 import EditStaff from "./pages/Staff/EditStaff";
+
 const USER_TYPES = {
   NORMAL_USER: "Normal User",
-  ADMIN_USER: "Admin User"
-};
+  ADMIN_USER: "Admin User",
+} as const;
 
-const CURRENT_USER_TYPE = USER_TYPES.ADMIN_USER;
+type UserType = (typeof USER_TYPES)[keyof typeof USER_TYPES];
 
-const AdminElement = ({ children }: any) => {
+// Temporaire (mock)
+const CURRENT_USER_TYPE: UserType = USER_TYPES.ADMIN_USER;
+
+interface AdminElementProps {
+  children: React.ReactNode;
+}
+
+const AdminElement = ({ children }: AdminElementProps) => {
   if (CURRENT_USER_TYPE === USER_TYPES.ADMIN_USER) {
     return <>{children}</>;
-  } else {
-    return <Navigate to={"/"} />;
   }
+  return <Navigate to="/login" replace />;
 };
 
 export const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <SignInSide />,
-    errorElement: <ErrorPage />
-  },
-  {
-    path: "/login",
-    element: <SignInSide />
-  },
-  {
-    path: "/signup",
-    element: <SignUp />
-  },
-  {
-    path: "/forgot",
-    element: <ForgotPassword />
-  },
+  { path: "/", element: <SignInSide />, errorElement: <ErrorPage /> },
+  { path: "/login", element: <SignInSide /> },
+  { path: "/signup", element: <SignUp /> },
+  { path: "/forgot", element: <ForgotPassword /> },
+
   {
     path: "/dashboard",
     element: (
       <AdminElement>
         <Dashboard />
       </AdminElement>
-    )
+    ),
   },
   {
     path: "/orders",
@@ -66,7 +63,7 @@ export const router = createBrowserRouter([
       <AdminElement>
         <AllOrders />
       </AdminElement>
-    )
+    ),
   },
   {
     path: "/profile",
@@ -74,7 +71,7 @@ export const router = createBrowserRouter([
       <AdminElement>
         <Profile />
       </AdminElement>
-    )
+    ),
   },
   {
     path: "/patient-info/:id",
@@ -82,7 +79,7 @@ export const router = createBrowserRouter([
       <AdminElement>
         <PatientInfo patients={mockPatientData} />
       </AdminElement>
-    )
+    ),
   },
   {
     path: "/patient-list",
@@ -90,7 +87,7 @@ export const router = createBrowserRouter([
       <AdminElement>
         <PatientList data={mockPatientData} />
       </AdminElement>
-    )
+    ),
   },
   {
     path: "/doctor-list",
@@ -98,7 +95,7 @@ export const router = createBrowserRouter([
       <AdminElement>
         <DoctorList />
       </AdminElement>
-    )
+    ),
   },
   {
     path: "/appointments",
@@ -106,7 +103,7 @@ export const router = createBrowserRouter([
       <AdminElement>
         <Appointments />
       </AdminElement>
-    )
+    ),
   },
   {
     path: "/calender",
@@ -114,7 +111,7 @@ export const router = createBrowserRouter([
       <AdminElement>
         <Calender />
       </AdminElement>
-    )
+    ),
   },
   {
     path: "/kanban",
@@ -122,7 +119,7 @@ export const router = createBrowserRouter([
       <AdminElement>
         <Kanban />
       </AdminElement>
-    )
+    ),
   },
   {
     path: "/account",
@@ -130,7 +127,7 @@ export const router = createBrowserRouter([
       <AdminElement>
         <Account />
       </AdminElement>
-    )
+    ),
   },
   {
     path: "/settings",
@@ -138,18 +135,40 @@ export const router = createBrowserRouter([
       <AdminElement>
         <Settings />
       </AdminElement>
-    )
+    ),
   },
   {
+    path: "/help",
+    element: (
+      <AdminElement>
+        <Help />
+      </AdminElement>
+    ),
+  },
+
+  // ✅ Staff
+  {
     path: "/staff",
-    element: <AdminElement><StaffList /></AdminElement>,
+    element: (
+      <AdminElement>
+        <StaffList />
+      </AdminElement>
+    ),
   },
   {
     path: "/staff/add",
-    element: <AdminElement><AddStaff /></AdminElement>,
+    element: (
+      <AdminElement>
+        <AddStaff />
+      </AdminElement>
+    ),
   },
   {
     path: "/staff/edit/:id",
-    element: <AdminElement><EditStaff /></AdminElement>,
+    element: (
+      <AdminElement>
+        <EditStaff />
+      </AdminElement>
+    ),
   },
 ]);

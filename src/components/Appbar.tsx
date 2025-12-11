@@ -18,30 +18,30 @@ import { Link } from "react-router-dom";
 import { settings } from "../constant";
 import { AppBar, Drawer } from "../styles";
 
-export default function Appbar(props: { appBarTitle: string }) {
-  const [open, setOpen] = React.useState(true);
-  const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
-    null
-  );
-  const toggleDrawer = () => {
-    setOpen(!open);
-  };
-  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorElUser(event.currentTarget);
-  };
+interface AppbarProps {
+  appBarTitle: string;
+  notificationsCount?: number;
+}
 
-  const handleCloseUserMenu = () => {
-    setAnchorElUser(null);
-  };
+export default function Appbar({
+  appBarTitle,
+  notificationsCount = 0,
+}: AppbarProps) {
+  const [open, setOpen] = React.useState(true);
+  const [anchorElUser, setAnchorElUser] =
+    React.useState<null | HTMLElement>(null);
+
+  const toggleDrawer = () => setOpen((prev) => !prev);
+
+  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) =>
+    setAnchorElUser(event.currentTarget);
+
+  const handleCloseUserMenu = () => setAnchorElUser(null);
 
   return (
     <Box sx={{ display: "flex" }}>
       <AppBar position="absolute" open={open}>
-        <Toolbar
-          sx={{
-            pr: "24px" // keep right padding when drawer closed
-          }}
-        >
+        <Toolbar sx={{ pr: "24px" }}>
           <IconButton
             edge="start"
             color="inherit"
@@ -49,11 +49,12 @@ export default function Appbar(props: { appBarTitle: string }) {
             onClick={toggleDrawer}
             sx={{
               marginRight: "36px",
-              ...(open && { display: "none" })
+              ...(open && { display: "none" }),
             }}
           >
             <MenuIcon />
           </IconButton>
+
           <Typography
             component="h1"
             variant="h6"
@@ -61,61 +62,57 @@ export default function Appbar(props: { appBarTitle: string }) {
             noWrap
             sx={{ flexGrow: 1 }}
           >
-            {props.appBarTitle}
+            {appBarTitle}
           </Typography>
 
           <Box sx={{ display: { xs: "none", md: "flex" } }}>
-            <IconButton
-              size="large"
-              aria-label="show 17 new notifications"
-              color="inherit"
-            >
-              <Badge badgeContent={17} color="secondary">
+            <IconButton size="large" aria-label="notifications" color="inherit">
+              <Badge badgeContent={notificationsCount} color="secondary">
                 <NotificationsIcon />
               </Badge>
             </IconButton>
-            <Tooltip title="Open settings">
+
+            <Tooltip title="Profil / Settings">
               <IconButton
                 size="large"
                 edge="end"
-                aria-label="account of current user"
+                aria-label="account menu"
                 aria-haspopup="true"
                 color="inherit"
                 onClick={handleOpenUserMenu}
               >
-                <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+                <Avatar alt="User Avatar" src="/static/images/avatar/2.jpg" />
               </IconButton>
             </Tooltip>
+
             <Menu
               sx={{ mt: "45px" }}
               id="menu-appbar"
               anchorEl={anchorElUser}
-              anchorOrigin={{
-                vertical: "top",
-                horizontal: "right"
-              }}
+              anchorOrigin={{ vertical: "top", horizontal: "right" }}
               keepMounted
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "right"
-              }}
+              transformOrigin={{ vertical: "top", horizontal: "right" }}
               open={Boolean(anchorElUser)}
               onClose={handleCloseUserMenu}
             >
               {settings.map((setting, index) => (
-                <MenuItem key={index} onClick={handleCloseUserMenu}>
-                  <Link
-                    to={setting.url}
-                    style={{ textDecoration: "none", color: "inherit" }}
-                  >
-                    <Typography textAlign="center">{setting.text}</Typography>
-                  </Link>
+                <MenuItem
+                  key={index}
+                  component={Link}
+                  to={setting.url}
+                  onClick={handleCloseUserMenu}
+                  sx={{ textDecoration: "none", color: "inherit" }}
+                >
+                  <Typography textAlign="center">
+                    {setting.text}
+                  </Typography>
                 </MenuItem>
               ))}
             </Menu>
           </Box>
         </Toolbar>
       </AppBar>
+
       <Drawer variant="permanent" open={open}>
         <Toolbar
           sx={{
@@ -123,29 +120,33 @@ export default function Appbar(props: { appBarTitle: string }) {
             alignItems: "center",
             justifyContent: "space-between",
             px: [1],
-            minHeight: "64px !important"
+            minHeight: "64px !important",
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", flex: 1, gap: 1 }}>
-            <img src="hospital.svg" height="40px" alt="logo" />
-            <Typography 
-              variant="h4" 
-              sx={{ 
+            <img src="/hospital.svg" height="40px" alt="logo" />
+
+            <Typography
+              variant="h4"
+              sx={{
                 color: "#005B93",
                 fontWeight: 600,
                 fontSize: { xs: "1.2rem", sm: "1.5rem" },
                 whiteSpace: "nowrap",
-                overflow: "visible"
+                overflow: "visible",
               }}
             >
-              MEDLNSIGHT
+              MEDINSIGHT
             </Typography>
           </Box>
+
           <IconButton onClick={toggleDrawer} sx={{ flexShrink: 0 }}>
             <ChevronLeftIcon />
           </IconButton>
         </Toolbar>
+
         <Divider />
+
         <List component="nav">
           {mainListItems}
           <Divider sx={{ my: 1 }} />

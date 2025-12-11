@@ -20,156 +20,70 @@ import BookOnlineIcon from "@mui/icons-material/BookOnline";
 import SickIcon from "@mui/icons-material/Sick";
 import ViewKanbanIcon from "@mui/icons-material/ViewKanban";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
-import LocalHospitalIcon from "@mui/icons-material/LocalHospital"; // 👈 Nouveau icon staff
+import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
 
-//
-// ------------------------------
-// 👇 MENU PRINCIPAL (Sidebar)
-// ------------------------------
-//
 const primarynavList = [
-  {
-    link: "/dashboard",
-    label: "Dashboard",
-    icon: <DashboardIcon />,
-  },
-  {
-    link: "/profile",
-    label: "Doctor Profile",
-    icon: <AccountCircleIcon />,
-  },
-  {
-    link: "/doctor-list",
-    label: "Doctor List",
-    icon: <PeopleIcon />,
-  },
-  {
-    link: "/patient-list",
-    label: "Patient List",
-    icon: <SickIcon />,
-  },
+  { link: "/dashboard", label: "Dashboard", icon: <DashboardIcon /> },
+  { link: "/profile", label: "Doctor Profile", icon: <AccountCircleIcon /> },
+  { link: "/doctor-list", label: "Doctor List", icon: <PeopleIcon /> },
+  { link: "/patient-list", label: "Patient List", icon: <SickIcon /> },
 
-  // ⭐⭐⭐ AJOUT DU MODULE STAFF — VERSION AMÉLIORÉE
+  // ✅ STAFF
   {
     link: "/staff",
     label: "Staff Management",
-    icon: <LocalHospitalIcon />, // 👌 Meilleur icon pour staff médical
+    icon: <LocalHospitalIcon />,
   },
 
-  {
-    link: "/appointments",
-    label: "Appointments",
-    icon: <BookOnlineIcon />,
-  },
-  {
-    link: "/calender",
-    label: "Calender",
-    icon: <CalendarMonthIcon />,
-  },
-  {
-    link: "/kanban",
-    label: "Kanban",
-    icon: <ViewKanbanIcon />,
-  },
-  {
-    link: "/account",
-    label: "Account",
-    icon: <ManageAccountsIcon />,
-  },
+  { link: "/appointments", label: "Appointments", icon: <BookOnlineIcon /> },
+  { link: "/calender", label: "Calendar", icon: <CalendarMonthIcon /> },
+  { link: "/kanban", label: "Kanban", icon: <ViewKanbanIcon /> },
+  { link: "/account", label: "Account", icon: <ManageAccountsIcon /> },
 ];
 
-//
-// ------------------------------
-// 👇 SECONDAIRE (Saved Reports)
-// ------------------------------
-//
 const secondaryNavList = [
-  {
-    link: "/lab-results",
-    label: "Lab Results",
-    icon: <ReceiptLongIcon />,
-  },
-  {
-    link: "/medical-records",
-    label: "Medical Records",
-    icon: <DescriptionIcon />,
-  },
-  {
-    link: "/prescriptions",
-    label: "Prescriptions",
-    icon: <AssignmentTurnedInIcon />,
-  },
-  {
-    link: "/plans",
-    label: "Care Plans",
-    icon: <AssignmentIcon />,
-  },
-  {
-    link: "/forms",
-    label: "Forms",
-    icon: <DescriptionIcon />,
-  },
-  {
-    link: "/help",
-    label: "Get Help",
-    icon: <HelpIcon />,
-  },
-  {
-    link: "/settings",
-    label: "Settings",
-    icon: <SettingsIcon />,
-  },
-  {
-    link: "/login",
-    label: "Logout",
-    icon: <LogoutIcon />,
-  },
+  { link: "/lab-results", label: "Lab Results", icon: <ReceiptLongIcon /> },
+  { link: "/medical-records", label: "Medical Records", icon: <DescriptionIcon /> },
+  { link: "/prescriptions", label: "Prescriptions", icon: <AssignmentTurnedInIcon /> },
+  { link: "/plans", label: "Care Plans", icon: <AssignmentIcon /> },
+  { link: "/forms", label: "Forms", icon: <DescriptionIcon /> },
+  { link: "/help", label: "Get Help", icon: <HelpIcon /> },
+  { link: "/settings", label: "Settings", icon: <SettingsIcon /> },
+  { link: "/login", label: "Logout", icon: <LogoutIcon /> },
 ];
 
-//
-// -----------------------------------
-// EXPORT — MENU PRINCIPAL du Sidebar
-// -----------------------------------
-//
 export const mainListItems = (
-  <React.Fragment>
+  <>
     {primarynavList.map((item, index) => (
-      <Link
+      <ListItemButton
         key={index}
+        component={Link}
         to={item.link}
-        style={{ textDecoration: "none", color: "inherit" }}
+        sx={{ color: "inherit" }}
       >
-        <ListItemButton>
-          <ListItemIcon>{item.icon}</ListItemIcon>
-          <ListItemText primary={item.label} />
-        </ListItemButton>
-      </Link>
+        <ListItemIcon>{item.icon}</ListItemIcon>
+        <ListItemText primary={item.label} />
+      </ListItemButton>
     ))}
-  </React.Fragment>
+  </>
 );
 
-//
-// -----------------------------------
-// EXPORT — "Saved Reports"
-// -----------------------------------
-//
 export const secondaryListItems = (
-  <React.Fragment>
+  <>
     <ListSubheader component="div" inset>
       Saved Reports
     </ListSubheader>
 
     {secondaryNavList.map((item, index) => (
-      <Link
+      <ListItemButton
         key={index}
+        component={Link}
         to={item.link}
-        style={{ textDecoration: "none", color: "inherit" }}
+        sx={{ color: "inherit" }}
       >
-        <ListItemButton>
-          <ListItemIcon>{item.icon}</ListItemIcon>
-          <ListItemText primary={item.label} />
-        </ListItemButton>
-      </Link>
+        <ListItemIcon>{item.icon}</ListItemIcon>
+        <ListItemText primary={item.label} />
+      </ListItemButton>
     ))}
-  </React.Fragment>
+  </>
 );

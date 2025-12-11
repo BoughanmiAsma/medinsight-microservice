@@ -1,59 +1,71 @@
+// src/api/staffApi.ts
 import axios from "axios";
+
+export type StaffType =
+  | "MEDECIN"
+  | "INFIRMIER"
+  | "AIDE_SOIGNANT"
+  | "TECHNICIEN"
+  | "SECRETAIRE";
 
 export interface Staff {
   id?: number;
   nom: string;
   prenom: string;
-  email: string;
-  telephone: string;
-  type: string;
-  specialite: string;
-  numeroLicence: string;
-  actif: boolean;
-  dateEmbauche: string | null; // LocalDateTime ISO
+  type: StaffType;
+
+  specialite?: string;
+  email?: string;
+  telephone?: string;
+
+  numeroLicence?: string;
+  dateEmbauche?: string; // ISO yyyy-mm-dd ou yyyy-mm-ddThh:mm:ss
+  actif?: boolean;
 }
 
-const API_URL = "http://localhost:9088/staffs";
+/**
+ * ✅ CRA proxy friendly:
+ * - en dev, si tu mets proxy dans package.json, utilise une URL relative.
+ * - en prod, tu peux surcharger via REACT_APP_STAFF_API_URL.
+ *
+ * Ton backend expose /staffs (pas /api/staff)
+ */
+const API_URL =
+  (process as any).env?.REACT_APP_STAFF_API_URL || "/staffs";
 
-// Create axios instance with default config
-const apiClient = axios.create({
+export const staffApi = axios.create({
   baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 10000, // 10 seconds timeout
 });
 
-// Request interceptor for error handling
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response) {
-      // Server responded with error status
-      console.error("API Error:", error.response.data);
-      return Promise.reject(error);
-    } else if (error.request) {
-      // Request made but no response received
-      console.error("Network Error:", error.request);
-      return Promise.reject(new Error("Erreur de connexion au serveur"));
-    } else {
-      // Something else happened
-      console.error("Error:", error.message);
-      return Promise.reject(error);
-    }
+/**
+ * ✅ Ajout automatique du token Keycloak si présent.
+ * Adapte la clé selon ton Auth (localStorage / zustand / etc.)
+ */
+staffApi.interceptors.request.use((config) => {
+  const token =
+    localStorage.getItem("token") ||
+    localStorage.getItem("access_token");
+
+  if (token) {
+    config.headers = config.headers ?? {};
+    config.headers.Authorization = `Bearer ${token}`;
   }
-);
+  return config;
+});
 
-export const getAllStaffs = () => apiClient.get("");
-
+// CRUD
+export const getAllStaffs = () => staffApi.get<Staff[]>("");
 export const getStaffById = (id: number) =>
-  apiClient.get(`/${id}`);
+  staffApi.get<Staff>(`/${id}`);
 
-export const createStaff = (data: Staff) =>
-  apiClient.post("", data);
+export const createStaff = (staff: Staff) =>
+  staffApi.post<Staff>("", staff);
 
-export const updateStaff = (id: number, data: Staff) =>
-  apiClient.put(`/${id}`, data);
+export const updateStaff = (id: number, staff: Staff) =>
+  staffApi.put<Staff>(`/${id}`, staff);
 
 export const deleteStaff = (id: number) =>
-  apiClient.delete(`/${id}`);
+  staffApi.delete<void>(`/${id}`);
