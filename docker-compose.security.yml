@@ -6,7 +6,8 @@ networks:
 
 
   microservices-net:
-    external: true
+    driver: bridge
+
 
 
 
@@ -143,8 +144,7 @@ services:
       KONG_PG_PASSWORD: ${KONG_DB_PASSWORD}
       KONG_PASSWORD: ${KONG_ADMIN_PASSWORD}
 
-      # Declarative Config
-      KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
+
 
       # Logging
       KONG_PROXY_ACCESS_LOG: /dev/stdout
@@ -159,10 +159,10 @@ services:
       KONG_ADMIN_GUI_CSRF_PROTECTION: "true"
 
       # Network
-      KONG_PROXY_LISTEN: "0.0.0.0:8200"
-      KONG_ADMIN_LISTEN: "0.0.0.0:8201"
-      KONG_ADMIN_GUI_LISTEN: "0.0.0.0:8203"
-      KONG_STATUS_LISTEN: "0.0.0.0:8204"
+      KONG_PROXY_LISTEN: "0.0.0.0:8000"
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+      KONG_ADMIN_GUI_LISTEN: "0.0.0.0:8002"
+      KONG_STATUS_LISTEN: "0.0.0.0:8100"
 
       # Features
       KONG_PLUGINS: "bundled,bot-detection,rate-limiting,acl,key-auth,request-transformer"
@@ -171,9 +171,8 @@ services:
       - "8200:8000"   # Proxy
       - "8201:8001"   # Admin API
       - "8203:8002"   # Kong Manager
-      - "8100:8204"   # Status
+      - "8100:8100"   # Status
     volumes:
-      - ./kong/kong.yml:/etc/kong/kong.yml:ro
       - ./kong/plugins:/etc/kong/plugins:ro
     depends_on:
       kong-db:
