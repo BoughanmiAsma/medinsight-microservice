@@ -13,7 +13,7 @@ jobs:
           - MedInsight-Microservices/dossier-service
           - MedInsight-Microservices/lab-service
           - MedInsight-Microservices/ordonnance-service
-          - staff-service
+          - Staff-service
     steps:
       # 1️⃣ Checkout repo
       - uses: actions/checkout@v3
