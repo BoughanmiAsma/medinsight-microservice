@@ -44,29 +44,4 @@ jobs:
           docker build -t monuser/$SERVICE_NAME:latest ./${{ matrix.service }}
           docker push monuser/$SERVICE_NAME:latest
 
-      # 6️⃣ Configure AWS
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
 
-      # 7️⃣ Install kubectl
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'v1.30.0'
-
-      # 8️⃣ Update kubeconfig pour EKS
-      - name: Update kubeconfig
-        run: aws eks update-kubeconfig --name mon-cluster --region us-east-1
-
-      # 9️⃣ Deploy microservice sur Kubernetes
-      - name: Deploy ${{ matrix.service }} to Kubernetes
-        run: |
-          SERVICE_NAME=$(basename ${{ matrix.service }})
-          # Met à jour l'image dans le deployment existant
-          kubectl set image deployment/$SERVICE_NAME $SERVICE_NAME=monuser/$SERVICE_NAME:latest
-          # Vérifie le rollout
-          kubectl rollout status deployment/$SERVICE_NAME
