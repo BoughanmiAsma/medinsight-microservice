@@ -38,10 +38,14 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       # 5️⃣ Build & Push Docker image
-      - name: Build & Push ${{ matrix.service }}
+      - name: Build and push Docker image
         run: |
-          SERVICE_NAME=$(basename ${{ matrix.service }} | tr '[:upper:]' '[:lower:]')
-          docker build -t monuser/$SERVICE_NAME:latest ./${{ matrix.service }}
-          docker push boughanmiasma/$SERVICE_NAME:latest
+          # Définir le nom du service depuis la matrice
+          SERVICE_NAME=${{ matrix.service }}
+          # Construire l'image avec tag spécifique pour chaque service
+          docker build -t boughanmiasma/pds:${SERVICE_NAME} ./${SERVICE_NAME}
+          # Pousser l'image vers Docker Hub
+          docker push boughanmiasma/pds:${SERVICE_NAME}
+
 
 
