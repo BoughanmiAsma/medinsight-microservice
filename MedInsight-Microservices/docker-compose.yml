@@ -1,0 +1,125 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: medinsight-postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: medinsight_platform
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./infra/init-sql:/docker-entrypoint-initdb.d
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - medinsight-net
+
+  mongo:
+    image: mongo:6.0
+    container_name: medinsight-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - medinsight-net
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: medinsight-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - medinsight-net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: medinsight-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - medinsight-net
+
+  # ==================== MICROSERVICES ====================
+  dossier-service:
+    build: 
+      context: ./dossier-service
+      dockerfile: Dockerfile
+    container_name: dossier-service
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/medinsight_platform
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: password
+      # Kafka
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      # Keycloak (Using host.docker.internal because Keycloak is in another stack)
+      KEYCLOAK_SERVER_URL: http://host.docker.internal:8180
+    depends_on:
+      - postgres
+      - kafka
+    networks:
+      - medinsight-net
+
+  lab-service:
+    build:
+      context: ./lab-service
+      dockerfile: Dockerfile
+    container_name: lab-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/medinsight_platform
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: password
+      # Kafka
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      # Keycloak
+      KEYCLOAK_SERVER_URL: http://host.docker.internal:8180
+    depends_on:
+      - postgres
+      - kafka
+    networks:
+      - medinsight-net
+
+  ordonnance-service:
+    build:
+      context: ./ordonnance-service
+      dockerfile: Dockerfile
+    container_name: ordonnance-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/medinsight_platform
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: password
+      # Kafka
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      # Keycloak
+      KEYCLOAK_SERVER_URL: http://host.docker.internal:8180
+    depends_on:
+      - postgres
+      - kafka
+    networks:
+      - medinsight-net
+
+networks:
+  medinsight-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  mongo-data:

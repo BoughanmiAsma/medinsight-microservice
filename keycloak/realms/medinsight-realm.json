@@ -1,48 +1,286 @@
 {
   "realm": "microservices-realm",
   "enabled": true,
+  "displayName": "MedInsight Microservices Realm",
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
 
   "roles": {
     "realm": [
-      { "name": "ROLE_ADMIN" },
-      { "name": "ROLE_MEDECIN" },
-      { "name": "ROLE_SECRETAIRE" },
-      { "name": "ROLE_INFIRMIER" },
-      { "name": "ROLE_TECHNICIEN" },
-      { "name": "ROLE_AIDE_SOIGNANT" }
-    ]
-  },
-
-  "users": [
-    {
-      "username": "admin1",
-      "email": "admin@local",
-      "enabled": true,
-      "credentials": [
-        {
-          "type": "password",
-          "value": "Admin123!"
-        }
+      { "name": "ROLE_ADMIN", "description": "Administrateur système" },
+      { "name": "ROLE_MEDECIN", "description": "Médecin" },
+      { "name": "ROLE_SECRETAIRE", "description": "Secrétaire médicale" },
+      { "name": "ROLE_INFIRMIER", "description": "Infirmier" },
+      { "name": "ROLE_TECHNICIEN", "description": "Technicien de laboratoire" },
+      { "name": "ROLE_AIDE_SOIGNANT", "description": "Aide-soignant" }
+    ],
+    "client": {
+      "staff-service": [
+        { "name": "staff:read", "description": "Lire les informations du personnel" },
+        { "name": "staff:write", "description": "Créer/modifier le personnel" },
+        { "name": "staff:delete", "description": "Supprimer un membre du personnel" }
       ],
-      "realmRoles": [
-        "ROLE_ADMIN"
+      "dossier-service": [
+        { "name": "dossier:read", "description": "Consulter les dossiers patients" },
+        { "name": "dossier:write", "description": "Créer/modifier les dossiers" },
+        { "name": "dossier:delete", "description": "Supprimer des dossiers" }
+      ],
+      "lab-service": [
+        { "name": "lab:read", "description": "Consulter les examens de laboratoire" },
+        { "name": "lab:write", "description": "Créer des demandes d'examen" },
+        { "name": "lab:view-results", "description": "Voir les résultats d'analyses" }
+      ],
+      "ordonnance-service": [
+        { "name": "ordonnance:read", "description": "Consulter les ordonnances" },
+        { "name": "ordonnance:write", "description": "Créer des ordonnances" },
+        { "name": "ordonnance:validate", "description": "Valider une ordonnance" }
       ]
     }
-  ],
+  },
 
   "clients": [
     {
       "clientId": "staff-service",
+      "name": "Staff Service",
+      "description": "Service de gestion du personnel - Client confidentiel pour API Admin Keycloak",
       "enabled": true,
       "publicClient": false,
-      "secret": "CHANGE_ME_CLIENT_SECRET",
+      "secret": "staff-service-secret-2024",
       "serviceAccountsEnabled": true,
       "standardFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "protocol": "openid-connect",
       "redirectUris": [],
+      "webOrigins": [],
       "attributes": {
         "access.token.lifespan": "300"
+      }
+    },
+    {
+      "clientId": "dossier-service",
+      "name": "Dossier Service",
+      "description": "Service de gestion des dossiers patients",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "dossier-service-secret-2024",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "protocol": "openid-connect",
+      "redirectUris": [],
+      "webOrigins": [],
+      "attributes": {
+        "access.token.lifespan": "300"
+      }
+    },
+    {
+      "clientId": "lab-service",
+      "name": "Lab Service",
+      "description": "Service de gestion des examens de laboratoire",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "lab-service-secret-2024",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "protocol": "openid-connect",
+      "redirectUris": [],
+      "webOrigins": [],
+      "attributes": {
+        "access.token.lifespan": "300"
+      }
+    },
+    {
+      "clientId": "ordonnance-service",
+      "name": "Ordonnance Service",
+      "description": "Service de gestion des ordonnances",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "ordonnance-service-secret-2024",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "protocol": "openid-connect",
+      "redirectUris": [],
+      "webOrigins": [],
+      "attributes": {
+        "access.token.lifespan": "300"
+      }
+    },
+    {
+      "clientId": "medinsight-client",
+      "name": "MedInsight Client",
+      "description": "Client public pour frontend React et tests Postman",
+      "enabled": true,
+      "publicClient": true,
+      "secret": "",
+      "serviceAccountsEnabled": false,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "implicitFlowEnabled": false,
+      "protocol": "openid-connect",
+      "redirectUris": [
+        "http://localhost:3000/*",
+        "http://localhost:3000/callback"
+      ],
+      "webOrigins": [
+        "http://localhost:3000"
+      ],
+      "attributes": {
+        "access.token.lifespan": "300",
+        "pkce.code.challenge.method": "S256"
+      },
+      "protocolMappers": [
+        {
+          "name": "realm-roles-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "client-roles-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "resource_access.${client_id}.roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "username-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "username",
+            "claim.name": "preferred_username",
+            "jsonType.label": "String",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "email-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "email",
+            "claim.name": "email",
+            "jsonType.label": "String",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+
+  "users": [
+    {
+      "username": "admin1",
+      "email": "admin@medinsight.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Admin",
+      "lastName": "System",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Admin123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_ADMIN"
+      ],
+      "clientRoles": {
+        "staff-service": ["staff:read", "staff:write", "staff:delete"],
+        "dossier-service": ["dossier:read", "dossier:write", "dossier:delete"],
+        "lab-service": ["lab:read", "lab:write", "lab:view-results"],
+        "ordonnance-service": ["ordonnance:read", "ordonnance:write", "ordonnance:validate"]
+      }
+    },
+    {
+      "username": "medecin1",
+      "email": "medecin@medinsight.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Dr. Jean",
+      "lastName": "Dupont",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Medecin123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_MEDECIN"
+      ],
+      "clientRoles": {
+        "dossier-service": ["dossier:read", "dossier:write"],
+        "lab-service": ["lab:read", "lab:write", "lab:view-results"],
+        "ordonnance-service": ["ordonnance:read", "ordonnance:write", "ordonnance:validate"]
+      }
+    },
+    {
+      "username": "secretaire1",
+      "email": "secretaire@medinsight.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Marie",
+      "lastName": "Martin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Secret123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_SECRETAIRE"
+      ],
+      "clientRoles": {
+        "staff-service": ["staff:read"],
+        "dossier-service": ["dossier:read", "dossier:write"]
+      }
+    },
+    {
+      "username": "technicien1",
+      "email": "technicien@medinsight.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Pierre",
+      "lastName": "Leblanc",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Tech123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_TECHNICIEN"
+      ],
+      "clientRoles": {
+        "lab-service": ["lab:read", "lab:write", "lab:view-results"]
       }
     }
   ]

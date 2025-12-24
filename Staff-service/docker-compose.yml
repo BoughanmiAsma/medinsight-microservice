@@ -17,9 +17,8 @@ services:
       - microservices-net
   staff-service:
     build: .
-    container_name: staff-service
     ports:
-      - "9002:9002"
+      - "9005:9002"
     depends_on:
       staff-db:
         condition: service_healthy
@@ -27,6 +26,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://staff-db:3306/staffdb
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: secret
+      keycloak_client_secret: ${KEYCLOAK_STAFF_CLIENT_SECRET}
     networks:
       - staff-net
 

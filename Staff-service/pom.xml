@@ -11,7 +11,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
-	<groupId>com.pds.microservices</groupId>
+	<groupId>com.medinsight</groupId>
 	<artifactId>Staff-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Staff-service</name>
@@ -83,11 +83,7 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- Resource server (pour valider JWT sur endpoints) -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
-		</dependency>
+
 
 		<!-- Keycloak Admin client -->
 		<dependency>
