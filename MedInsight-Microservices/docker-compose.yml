@@ -16,13 +16,16 @@ services:
     networks:
       - medinsight-net
 
-  mongo:
-    image: mongo:6.0
-    container_name: medinsight-mongo
+  mysql:
+    image: mysql:8.0
+    container_name: medinsight-mysql
     ports:
-      - "27017:27017"
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: staffdb
     volumes:
-      - mongo-data:/data/db
+      - mysql-data:/var/lib/mysql
     networks:
       - medinsight-net
 
@@ -116,10 +119,29 @@ services:
     networks:
       - medinsight-net
 
+  staff-service:
+    build:
+      context: ./Staff-service
+      dockerfile: Dockerfile
+    container_name: staff-service
+    ports:
+      - "9002:9002"
+    environment:
+      # Use the container name 'mysql' and internal port 3306
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/staffdb
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: secret
+      # Keycloak
+      KEYCLOAK_SERVER_URL: http://host.docker.internal:8180
+    depends_on:
+      - mysql
+    networks:
+      - medinsight-net
+
 networks:
   medinsight-net:
     driver: bridge
 
 volumes:
   postgres-data:
-  mongo-data:
+  mysql-data:

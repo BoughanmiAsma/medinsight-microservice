@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dossier-secret
+  namespace: medinsight
+type: Opaque
+stringData:
+  DB_PASSWORD: ${DB_PASSWORD}
+  KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dossier-config
+  namespace: medinsight
+data:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/medinsight_platform
+  SPRING_DATASOURCE_USERNAME: admin
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  KEYCLOAK_AUTH_SERVER_URL: http://keycloak:8180
+  KEYCLOAK_REALM: medinsight-realm
+  KEYCLOAK_RESOURCE: dossier-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dossier-service
+  namespace: medinsight
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dossier-service
+  template:
+    metadata:
+      labels:
+        app: dossier-service
+    spec:
+      containers:
+      - name: dossier-service
+        image: boughanmiasma/pds:service-dossier
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: dossier-config
+        env:
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dossier-secret
+              key: DB_PASSWORD
+        - name: KEYCLOAK_CREDENTIALS_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: dossier-secret
+              key: KEYCLOAK_CLIENT_SECRET
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dossier-service
+  namespace: medinsight
+spec:
+  selector:
+    app: dossier-service
+  ports:
+  - port: 8080
+    targetPort: 8080
+  type: ClusterIP

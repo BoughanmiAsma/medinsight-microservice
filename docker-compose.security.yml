@@ -1,10 +1,3 @@
-networks:
-  medinsight-security:
-    driver: bridge
-
-  microservices-net:
-    external: true
-
 volumes:
   keycloak_data:
   kong_data:
@@ -17,7 +10,7 @@ services:
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      POSTGRES_PASSWORD: "password"
     volumes:
       - keycloak_data:/var/lib/postgresql/data
     ports:
@@ -41,10 +34,10 @@ services:
       KC_DB_URL_HOST: keycloak-db
       KC_DB_URL_DATABASE: keycloak
       KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_DB_PASSWORD: "password"
 
-      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN_USER}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
 
       KC_PROXY: edge
       KC_HTTP_ENABLED: "true"
@@ -76,7 +69,7 @@ services:
     environment:
       POSTGRES_DB: kong
       POSTGRES_USER: kong
-      POSTGRES_PASSWORD: ${KONG_DB_PASSWORD}
+      POSTGRES_PASSWORD: "password"
     volumes:
       - kong_data:/var/lib/postgresql/data
     ports:
@@ -99,7 +92,7 @@ services:
       KONG_DATABASE: postgres
       KONG_PG_HOST: kong-db
       KONG_PG_USER: kong
-      KONG_PG_PASSWORD: ${KONG_DB_PASSWORD}
+      KONG_PG_PASSWORD: "password"
     depends_on:
       kong-db:
         condition: service_healthy
@@ -114,13 +107,13 @@ services:
     build:
       context: ./kong
       dockerfile: Dockerfile
-    container_name: kong1
+    container_name: kong
     #restart: always
     environment:
       KONG_DATABASE: postgres
       KONG_PG_HOST: kong-db
       KONG_PG_USER: kong
-      KONG_PG_PASSWORD: ${KONG_DB_PASSWORD}
+      KONG_PG_PASSWORD: "password"
 
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
@@ -148,9 +141,18 @@ services:
         condition: service_healthy
     networks:
       - medinsight-security
+      - microservices-net
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "kong", "health"]
       interval: 30s
       timeout: 10s
       retries: 5
+
+networks:
+  medinsight-security:
+    driver: bridge
+
+  microservices-net:
+    external: true
+    name: medinsight-microservices_medinsight-net
