@@ -1,0 +1,158 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kong-db-secret
+  namespace: medinsight
+type: Opaque
+data:
+  POSTGRES_USER: a29uZw== # kong
+  POSTGRES_PASSWORD: cGFzc3dvcmQ= # password
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kong-db
+  namespace: medinsight
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kong-db
+  template:
+    metadata:
+      labels:
+        app: kong-db
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: kong
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: kong-db-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: kong-db-secret
+              key: POSTGRES_PASSWORD
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kong-db
+  namespace: medinsight
+spec:
+  selector:
+    app: kong-db
+  ports:
+  - port: 5432
+    targetPort: 5432
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kong-migrations
+  namespace: medinsight
+spec:
+  template:
+    spec:
+      containers:
+      - name: kong-migrations
+        image: kong:2.8
+        command: ["/bin/sh", "-c", "kong migrations bootstrap"]
+        env:
+        - name: KONG_DATABASE
+          value: postgres
+        - name: KONG_PG_HOST
+          value: kong-db
+        - name: KONG_PG_USER
+          valueFrom:
+            secretKeyRef:
+              name: kong-db-secret
+              key: POSTGRES_USER
+        - name: KONG_PG_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: kong-db-secret
+              key: POSTGRES_PASSWORD
+      restartPolicy: OnFailure
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kong
+  namespace: medinsight
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kong
+  template:
+    metadata:
+      labels:
+        app: kong
+    spec:
+      containers:
+      - name: kong
+        image: boughanmiasma/pds:service-kong # Assumes custom image for OIDC
+        ports:
+        - containerPort: 8000 # Proxy
+        - containerPort: 8001 # Admin
+        env:
+        - name: KONG_DATABASE
+          value: postgres
+        - name: KONG_PG_HOST
+          value: kong-db
+        - name: KONG_PG_USER
+          valueFrom:
+            secretKeyRef:
+              name: kong-db-secret
+              key: POSTGRES_USER
+        - name: KONG_PG_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: kong-db-secret
+              key: POSTGRES_PASSWORD
+        - name: KONG_PROXY_LISTEN
+          value: 0.0.0.0:8000, 0.0.0.0:8443 ssl
+        - name: KONG_ADMIN_LISTEN
+          value: 0.0.0.0:8001, 0.0.0.0:8444 ssl
+        - name: KONG_PLUGINS
+          value: bundled,oidc
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kong
+  namespace: medinsight
+spec:
+  selector:
+    app: kong
+  ports:
+  - name: proxy
+    port: 8000
+    targetPort: 8000
+  - name: admin
+    port: 8001
+    targetPort: 8001
+  type: ClusterIP

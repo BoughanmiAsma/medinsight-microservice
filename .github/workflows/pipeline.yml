@@ -1,0 +1,96 @@
+name: CI/CD Microservices Pipeline
+
+on:
+  push:
+    branches: 
+       - main
+       - feature/k8s
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service:
+          - MedInsight-Microservices/dossier-service
+          - MedInsight-Microservices/lab-service
+          - MedInsight-Microservices/ordonnance-service
+          - Staff-service
+
+    steps:
+      # 1. Checkout repository
+      - uses: actions/checkout@v3
+
+      # 2. Setup Java
+      - name: Set up JDK 20
+        uses: actions/setup-java@v3
+        with:
+          java-version: '20'
+          distribution: 'temurin'
+
+      # 3. Build microservice avec Maven
+      - name: Build ${{ matrix.service }}
+        working-directory: ./${{ matrix.service }}
+        run: mvn clean package -DskipTests
+
+      # 4. Login Docker Hub
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # 5. Build & Push Docker image
+      - name: Build and push Docker image
+        run: |
+          # Extraire le nom court du service (ex: dossier-service)
+          SERVICE_KEY=$(basename ${{ matrix.service }})
+          # Normaliser le nom de l'image
+          IMAGE_NAME=$(echo $SERVICE_KEY | tr '[:upper:]' '[:lower:]')
+          
+          docker build -t boughanmiasma/pds:service-$IMAGE_NAME ./${{ matrix.service }}
+          docker push boughanmiasma/pds:service-$IMAGE_NAME
+
+      # 6. Installer kubectl
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: v1.29.0
+
+      # 7. Configurer l'accès au cluster (Utilisation de Secret File pour éviter les erreurs de parse)
+      - name: Configure kubeconfig
+        env:
+          KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG }}
+        run: |
+          mkdir -p $HOME/.kube
+          # Utilisation de printf pour gérer les retours à la ligne correctement
+          printf "%s" "$KUBECONFIG_CONTENT" > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      # 8. Déployer le service correspondant
+      - name: Deploy to Kubernetes
+        env:
+          CLUSTER_DOMAIN: ${{ secrets.CLUSTER_DOMAIN }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
+        run: |
+          SERVICE_KEY=$(basename ${{ matrix.service }})
+          # Correction du chemin pour correspondre à la structure k8s/<service-name>/<service-name>.yml
+          MANIFEST_PATH="k8s/${SERVICE_KEY}/${SERVICE_KEY}.yml"
+          
+          echo "Deploying $SERVICE_KEY using $MANIFEST_PATH..."
+          
+          if [ -f "$MANIFEST_PATH" ]; then
+            # Injection des variables d'environnement dans le manifest (si nécessaire) et apply
+            # Note: Vous devez avoir CLUSTER_DOMAIN et autres secrets dans votre environnement GitHub.
+            envsubst < "$MANIFEST_PATH" | kubectl apply -f - -n medinsight
+          else
+            echo "Error: Manifest $MANIFEST_PATH not found!"
+            exit 1
+          fi
