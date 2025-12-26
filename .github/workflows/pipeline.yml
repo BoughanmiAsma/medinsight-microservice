@@ -61,21 +61,13 @@ jobs:
         with:
           version: v1.29.0
 
-      # 7. Configurer l'accès au cluster
+      # 7. Configurer l'accès au cluster (Méthode la plus robuste)
       - name: Configure kubeconfig
-        env:
-          KUBECONFIG_VAL: ${{ secrets.KUBECONFIG }}
-        run: |
-          mkdir -p $HOME/.kube
-          # Tentative de détection base64 ou texte brut
-          if echo "$KUBECONFIG_VAL" | grep -q "^apiVersion"; then
-            echo "$KUBECONFIG_VAL" > $HOME/.kube/config
-          else
-            echo "$KUBECONFIG_VAL" | base64 --decode > $HOME/.kube/config
-          fi
-          chmod 600 $HOME/.kube/config
-          echo "Kubeconfig configuré. Vérification du format..."
-          kubectl config view --raw || echo "ERREUR: Le format du Kubeconfig est toujours invalide."
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG }}
+          context: default # Ou le nom de votre contexte si différent
 
       # 8. Déployer l'infrastructure (Optionnel: une seule fois suffirait, mais on l'assure ici)
       - name: Deploy Infrastructure & Security
