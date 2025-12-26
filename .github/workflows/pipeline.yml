@@ -16,7 +16,7 @@ jobs:
           - MedInsight-Microservices/dossier-service
           - MedInsight-Microservices/lab-service
           - MedInsight-Microservices/ordonnance-service
-          - Staff-service
+          - MedInsight-Microservices/Staff-service
 
     steps:
       # 1. Checkout repository
