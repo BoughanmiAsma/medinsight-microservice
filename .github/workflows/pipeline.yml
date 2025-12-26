@@ -44,10 +44,13 @@ jobs:
       # 5. Build & Push Docker image
       - name: Build and push Docker image
         run: |
-          # Extraire le nom court du service (ex: dossier-service)
           SERVICE_KEY=$(basename ${{ matrix.service }})
-          # Normaliser le nom de l'image
-          IMAGE_NAME=$(echo $SERVICE_KEY | tr '[:upper:]' '[:lower:]')
+          # Mappage pour correspondre exactement aux noms dans les manifests k8s
+          if [ "$SERVICE_KEY" == "lab-service" ]; then
+            IMAGE_NAME="laboratoire"
+          else
+            IMAGE_NAME=$(echo $SERVICE_KEY | sed 's/-service//I' | tr '[:upper:]' '[:lower:]')
+          fi
           
           docker build -t boughanmiasma/pds:service-$IMAGE_NAME ./${{ matrix.service }}
           docker push boughanmiasma/pds:service-$IMAGE_NAME
@@ -58,17 +61,31 @@ jobs:
         with:
           version: v1.29.0
 
-      # 7. Configurer l'accès au cluster (Utilisation de Secret File pour éviter les erreurs de parse)
+      # 7. Configurer l'accès au cluster
       - name: Configure kubeconfig
         env:
           KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG }}
         run: |
           mkdir -p $HOME/.kube
-          # Utilisation de printf pour gérer les retours à la ligne correctement
           printf "%s" "$KUBECONFIG_CONTENT" > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
 
-      # 8. Déployer le service correspondant
+      # 8. Déployer l'infrastructure (Optionnel: une seule fois suffirait, mais on l'assure ici)
+      - name: Deploy Infrastructure & Security
+        env:
+          CLUSTER_DOMAIN: ${{ secrets.CLUSTER_DOMAIN }}
+        run: |
+          echo "Deploying infrastructure..."
+          kubectl apply -f k8s/namespace.yml
+          kubectl apply -f k8s/databases/ -n medinsight
+          kubectl apply -f k8s/kafka/ -n medinsight
+          kubectl apply -f k8s/keycloak/ -n medinsight
+          kubectl apply -f k8s/kong/ -n medinsight
+          
+          # Ingress avec envsubst
+          envsubst < k8s/ingress.yml | kubectl apply -f - -n medinsight
+
+      # 9. Déployer le service correspondant
       - name: Deploy to Kubernetes
         env:
           CLUSTER_DOMAIN: ${{ secrets.CLUSTER_DOMAIN }}
@@ -81,14 +98,12 @@ jobs:
           KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
         run: |
           SERVICE_KEY=$(basename ${{ matrix.service }})
-          # Correction du chemin pour correspondre à la structure k8s/<service-name>/<service-name>.yml
           MANIFEST_PATH="k8s/${SERVICE_KEY}/${SERVICE_KEY}.yml"
           
           echo "Deploying $SERVICE_KEY using $MANIFEST_PATH..."
           
           if [ -f "$MANIFEST_PATH" ]; then
-            # Injection des variables d'environnement dans le manifest (si nécessaire) et apply
-            # Note: Vous devez avoir CLUSTER_DOMAIN et autres secrets dans votre environnement GitHub.
+            # On utilise envsubst pour s'assurer que les variables (si présentes) sont injectées
             envsubst < "$MANIFEST_PATH" | kubectl apply -f - -n medinsight
           else
             echo "Error: Manifest $MANIFEST_PATH not found!"
