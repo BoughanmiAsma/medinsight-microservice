@@ -2,7 +2,9 @@ name: CI/CD Microservices Pipeline
 
 on:
   push:
-    branches: [ "main,feature/k8s" ]
+    branches: 
+       - main
+       - feature/k8s
 
 jobs:
   build-and-deploy:
