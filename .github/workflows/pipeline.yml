@@ -64,11 +64,18 @@ jobs:
       # 7. Configurer l'accès au cluster
       - name: Configure kubeconfig
         env:
-          KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG }}
+          KUBECONFIG_VAL: ${{ secrets.KUBECONFIG }}
         run: |
           mkdir -p $HOME/.kube
-          printf "%s" "$KUBECONFIG_CONTENT" > $HOME/.kube/config
+          # Tentative de détection base64 ou texte brut
+          if echo "$KUBECONFIG_VAL" | grep -q "^apiVersion"; then
+            echo "$KUBECONFIG_VAL" > $HOME/.kube/config
+          else
+            echo "$KUBECONFIG_VAL" | base64 --decode > $HOME/.kube/config
+          fi
           chmod 600 $HOME/.kube/config
+          echo "Kubeconfig configuré. Vérification du format..."
+          kubectl config view --raw || echo "ERREUR: Le format du Kubeconfig est toujours invalide."
 
       # 8. Déployer l'infrastructure (Optionnel: une seule fois suffirait, mais on l'assure ici)
       - name: Deploy Infrastructure & Security
