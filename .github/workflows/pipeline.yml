@@ -67,7 +67,7 @@ jobs:
         with:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBECONFIG }}
-          context: default # Ou le nom de votre contexte si différent
+          context: github-context
 
       # 8. Déployer l'infrastructure (Optionnel: une seule fois suffirait, mais on l'assure ici)
       - name: Deploy Infrastructure & Security
