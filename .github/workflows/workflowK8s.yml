@@ -1,0 +1,75 @@
+name: CI/CD Microservices Pipeline
+
+on:
+  push:
+    branches: [ "main,feature/k8s" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service:
+          - MedInsight-Microservices/dossier-service
+          - MedInsight-Microservices/lab-service
+          - MedInsight-Microservices/ordonnance-service
+          - Staff-service
+
+    steps:
+      #  Checkout repository
+      - uses: actions/checkout@v3
+
+      #  Setup Java
+      - name: Set up JDK 20
+        uses: actions/setup-java@v3
+        with:
+          java-version: '20'
+          distribution: 'temurin'
+
+      #  Build microservice avec Maven
+      - name: Build ${{ matrix.service }}
+        working-directory: ./${{ matrix.service }}
+        run: mvn clean package -DskipTests
+
+      #  Login Docker Hub
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      #  Build & Push Docker image
+      - name: Build and push Docker image
+        run: |
+          SERVICE_NAME=${{ matrix.service }}
+          IMAGE_TAG=$(echo $SERVICE_NAME | tr '/' '-')
+          docker build -t boughanmiasma/pds:$IMAGE_TAG ./${SERVICE_NAME}
+          docker push boughanmiasma/pds:$IMAGE_TAG
+
+      # ============================
+      #  DEPLOYMENT KUBERNETES
+      # ============================
+
+      #  Installer kubectl
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: v1.29.0
+
+      #  Configurer l'accès au cluster (KUBECONFIG)
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      #  Déployer le service correspondant
+      - name: Deploy to Kubernetes
+        run: |
+          SERVICE_NAME=${{ matrix.service }}
+          SERVICE_KEY=$(basename $SERVICE_NAME)
+
+          echo "Deploying $SERVICE_KEY..."
+
+          kubectl apply -f k8s/${SERVICE_KEY}.yaml -n medinsight
