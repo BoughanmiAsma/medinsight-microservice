@@ -1,0 +1,37 @@
+# Crypto configuration for MedInsight Hyperledger Fabric Network
+# This file defines the structure for generating cryptographic material
+
+OrdererOrgs:
+  - Name: Orderer
+    Domain: medinsight.com
+    EnableNodeOUs: true
+    Specs:
+      - Hostname: orderer
+
+PeerOrgs:
+  # Organisation des Médecins (DoctorOrg)
+  - Name: DoctorOrg
+    Domain: doctor.medinsight.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+    
+  # Organisation des Pharmacies (PharmacyOrg)
+  - Name: PharmacyOrg
+    Domain: pharmacy.medinsight.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+    
+  # Organisation des Patients (PatientOrg)
+  - Name: PatientOrg
+    Domain: patient.medinsight.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1

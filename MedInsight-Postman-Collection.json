@@ -1,0 +1,466 @@
+{
+    "info": {
+        "name": "MedInsight - Keycloak + Kong OIDC",
+        "description": "Collection complète pour tester l'authentification et l'autorisation MedInsight avec Keycloak et Kong Gateway",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "keycloak_url",
+            "value": "http://localhost:8180",
+            "type": "string"
+        },
+        {
+            "key": "kong_proxy",
+            "value": "http://localhost:8200",
+            "type": "string"
+        },
+        {
+            "key": "realm",
+            "value": "microservices-realm",
+            "type": "string"
+        },
+        {
+            "key": "client_id",
+            "value": "medinsight-client",
+            "type": "string"
+        },
+        {
+            "key": "access_token",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "00 - Authentication",
+            "item": [
+                {
+                    "name": "Login - Admin",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.collectionVariables.set('access_token', jsonData.access_token);",
+                                    "    pm.collectionVariables.set('refresh_token', jsonData.refresh_token);",
+                                    "    console.log('Token saved:', jsonData.access_token);",
+                                    "} else {",
+                                    "    console.log('Login failed:', pm.response.text());",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/x-www-form-urlencoded"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "grant_type",
+                                    "value": "password",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "client_id",
+                                    "value": "{{client_id}}",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "username",
+                                    "value": "admin1",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "password",
+                                    "value": "Admin123!",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{keycloak_url}}/realms/{{realm}}/protocol/openid-connect/token",
+                            "host": [
+                                "{{keycloak_url}}"
+                            ],
+                            "path": [
+                                "realms",
+                                "{{realm}}",
+                                "protocol",
+                                "openid-connect",
+                                "token"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Login - Médecin",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.collectionVariables.set('access_token', jsonData.access_token);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "grant_type",
+                                    "value": "password",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "client_id",
+                                    "value": "{{client_id}}",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "username",
+                                    "value": "medecin1",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "password",
+                                    "value": "Medecin123!",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{keycloak_url}}/realms/{{realm}}/protocol/openid-connect/token",
+                            "host": [
+                                "{{keycloak_url}}"
+                            ],
+                            "path": [
+                                "realms",
+                                "{{realm}}",
+                                "protocol",
+                                "openid-connect",
+                                "token"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Login - Secrétaire",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.collectionVariables.set('access_token', jsonData.access_token);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "grant_type",
+                                    "value": "password",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "client_id",
+                                    "value": "{{client_id}}",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "username",
+                                    "value": "secretaire1",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "password",
+                                    "value": "Secret123!",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{keycloak_url}}/realms/{{realm}}/protocol/openid-connect/token",
+                            "host": [
+                                "{{keycloak_url}}"
+                            ],
+                            "path": [
+                                "realms",
+                                "{{realm}}",
+                                "protocol",
+                                "openid-connect",
+                                "token"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Login - Technicien",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.collectionVariables.set('access_token', jsonData.access_token);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "grant_type",
+                                    "value": "password",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "client_id",
+                                    "value": "{{client_id}}",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "username",
+                                    "value": "technicien1",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "password",
+                                    "value": "Tech123!",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{keycloak_url}}/realms/{{realm}}/protocol/openid-connect/token",
+                            "host": [
+                                "{{keycloak_url}}"
+                            ],
+                            "path": [
+                                "realms",
+                                "{{realm}}",
+                                "protocol",
+                                "openid-connect",
+                                "token"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "01 - Staff Service",
+            "item": [
+                {
+                    "name": "Get All Staff (via Kong)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{kong_proxy}}/staffs",
+                            "host": [
+                                "{{kong_proxy}}"
+                            ],
+                            "path": [
+                                "staffs"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get All Staff (SANS token - doit échouer)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{kong_proxy}}/api/staff",
+                            "host": [
+                                "{{kong_proxy}}"
+                            ],
+                            "path": [
+                                "staffs"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "02 - Dossier Service",
+            "item": [
+                {
+                    "name": "Get All Dossiers (via Kong)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{kong_proxy}}/api/dossiers",
+                            "host": [
+                                "{{kong_proxy}}"
+                            ],
+                            "path": [
+                                "api",
+                                "dossiers"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "03 - Lab Service",
+            "item": [
+                {
+                    "name": "Get All Lab Orders (via Kong)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{kong_proxy}}/api/lab-orders",
+                            "host": [
+                                "{{kong_proxy}}"
+                            ],
+                            "path": [
+                                "api",
+                                "lab-orders"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "04 - Ordonnance Service",
+            "item": [
+                {
+                    "name": "Get All Ordonnances (via Kong)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{kong_proxy}}/api/prescriptions",
+                            "host": [
+                                "{{kong_proxy}}"
+                            ],
+                            "path": [
+                                "api",
+                                "prescriptions"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "99 - Direct Access (Bypass Kong)",
+            "item": [
+                {
+                    "name": "Staff Service Direct (port 9002)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:9002/staffs",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "9002",
+                            "path": [
+                                "staffs"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Dossier Service Direct (port 8080)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8080/api/dossiers",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "api",
+                                "dossiers"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,45 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: medinsight-ingress
+  namespace: medinsight
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  tls:
+  - hosts:
+    - ${CLUSTER_DOMAIN}
+    secretName: medinsight-tls
+  rules:
+  - host: ${CLUSTER_DOMAIN}
+    http:
+      paths:
+      - path: /dossier
+        pathType: Prefix
+        backend:
+          service:
+            name: dossier-service
+            port:
+              number: 8080
+      - path: /staff
+        pathType: Prefix
+        backend:
+          service:
+            name: staff-service
+            port:
+              number: 9002
+      - path: /ordonnance
+        pathType: Prefix
+        backend:
+          service:
+            name: ordonnance-service
+            port:
+              number: 8082
+      - path: /laboratoire
+        pathType: Prefix
+        backend:
+          service:
+            name: laboratoire-service
+            port:
+              number: 8081

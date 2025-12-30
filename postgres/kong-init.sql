@@ -1,0 +1,2 @@
+-- Kong initialization file
+-- (laisser vide est OK)

@@ -1,0 +1,43 @@
+services:
+  staff-db:
+    image: mysql:8
+    container_name: staff-db
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: staffdb
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - staff-net
+      - microservices-net
+  staff-service:
+    build: .
+    ports:
+      - "9005:9002"
+    depends_on:
+      staff-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://staff-db:3306/staffdb
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: secret
+      keycloak_client_secret: ${KEYCLOAK_STAFF_CLIENT_SECRET}
+    networks:
+      - staff-net
+
+      - microservices-net
+
+networks:
+  microservices-net:
+    external: true
+
+  staff-net:
+    driver: bridge
+
+
+

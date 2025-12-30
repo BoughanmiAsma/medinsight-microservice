@@ -1,0 +1,20 @@
+# Binaries
+fabric-network/bin/
+**/*.exe
+**/*.dll
+
+# Dependencies
+**/vendor/
+node_modules/
+**/target/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Logs
+*.log
+
+# Temp files
+*.tmp

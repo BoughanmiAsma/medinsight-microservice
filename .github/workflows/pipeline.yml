@@ -1,0 +1,108 @@
+name: MedInsight CI/CD Professional Pipeline
+
+on:
+  push:
+    branches: 
+       - main
+       - feature/k8s
+
+env:
+  DOCKER_IMAGE_PREFIX: boughanmiasma/pds
+  NAMESPACE: medinsight
+  K8S_CONTEXT: github-context
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy Microservices
+    runs-on: ubuntu-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - MedInsight-Microservices/dossier-service
+          - MedInsight-Microservices/lab-service
+          - MedInsight-Microservices/ordonnance-service
+          - MedInsight-Microservices/Staff-service
+
+    steps:
+      # 1. Préparation de l'environnement
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 20
+        uses: actions/setup-java@v4
+        with:
+          java-version: '20'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # 2. Build de l'artéfact Java
+      - name: Build with Maven
+        working-directory: ./${{ matrix.service }}
+        run: mvn clean package -DskipTests -B
+
+      # 3. Gestion des images Docker
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build & Push Docker Image
+        run: |
+          SERVICE_KEY=$(basename ${{ matrix.service }})
+          # Mappage des noms pour correspondre aux manifests
+          if [ "$SERVICE_KEY" == "lab-service" ]; then
+            IMAGE_NAME="laboratoire"
+          else
+            IMAGE_NAME=$(echo $SERVICE_KEY | sed 's/-service//I' | tr '[:upper:]' '[:lower:]')
+          fi
+          
+          IMAGE_TAG="${{ env.DOCKER_IMAGE_PREFIX }}:service-$IMAGE_NAME"
+          
+          echo "Building image $IMAGE_TAG..."
+          docker build -t "$IMAGE_TAG" ./${{ matrix.service }}
+          docker push "$IMAGE_TAG"
+
+      # 4. Configuration Kubernetes
+      - name: Set up Kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Configure Kubeconfig
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG }}
+          context: ${{ env.K8S_CONTEXT }}
+
+      # 5. Déploiement Infrastructure (Exécuté en parallèle pour chaque branche de la matrice, idempotence via kubectl apply)
+      - name: Deploy Infrastructure
+        env:
+          CLUSTER_DOMAIN: ${{ secrets.CLUSTER_DOMAIN }}
+        run: |
+          echo "Syncing Infrastructure..."
+          kubectl apply -f k8s/namespace.yml
+          kubectl apply -f k8s/databases/ -n ${{ env.NAMESPACE }}
+          kubectl apply -f k8s/kafka/ -n ${{ env.NAMESPACE }}
+          kubectl apply -f k8s/keycloak/ -n ${{ env.NAMESPACE }}
+          kubectl apply -f k8s/kong/ -n ${{ env.NAMESPACE }}
+          
+          # Seul l'Ingress a besoin de CLUSTER_DOMAIN
+          envsubst < k8s/ingress.yml | kubectl apply -f - -n ${{ env.NAMESPACE }}
+
+      # 6. Déploiement du Microservice
+      - name: Deploy Microservice
+        run: |
+          SERVICE_KEY=$(basename ${{ matrix.service }})
+          MANIFEST_PATH="k8s/${SERVICE_KEY}/${SERVICE_KEY}.yml"
+          
+          if [ -f "$MANIFEST_PATH" ]; then
+            echo "Deploying $SERVICE_KEY..."
+            kubectl apply -f "$MANIFEST_PATH" -n ${{ env.NAMESPACE }}
+          else
+            echo "Error: Manifest $MANIFEST_PATH not found"
+            exit 1
+          fi

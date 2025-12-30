@@ -1,0 +1,234 @@
+version: '3.8'
+
+volumes:
+  orderer.medinsight.com:
+  peer0.doctor.medinsight.com:
+  peer0.pharmacy.medinsight.com:
+  peer0.patient.medinsight.com:
+
+
+networks:
+  fabric-net:
+    name: fabric-net
+    driver: bridge
+  medinsight-net:
+    name: medinsight-net
+    driver: bridge
+
+services:
+  # ==================== ORDERER ====================
+  orderer.medinsight.com:
+    container_name: orderer.medinsight.com
+    image: hyperledger/fabric-orderer:2.5
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_OPERATIONS_LISTENADDRESS=0.0.0.0:8443
+      - ORDERER_GENERAL_TLS_ENABLED=false
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: orderer
+    volumes:
+      - ./channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - ./crypto-config/ordererOrganizations/medinsight.com/orderers/orderer.medinsight.com/msp:/var/hyperledger/orderer/msp
+      - orderer.medinsight.com:/var/hyperledger/production/orderer
+    ports:
+      - 7050:7050
+      - 8443:8443
+    networks:
+      - fabric-net
+      - medinsight-net
+
+  # ==================== CA DOCTOR ====================
+  ca.doctor.medinsight.com:
+    image: hyperledger/fabric-ca:1.5
+    container_name: ca.doctor.medinsight.com
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca.doctor.medinsight.com
+      - FABRIC_CA_SERVER_TLS_ENABLED=false
+      - FABRIC_CA_SERVER_PORT=7054
+    ports:
+      - "7054:7054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    volumes:
+      - ./crypto-config/peerOrganizations/doctor.medinsight.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    networks:
+      - fabric-net
+      - medinsight-net
+
+  # ==================== PEER DOCTOR ====================
+  peer0.doctor.medinsight.com:
+    container_name: peer0.doctor.medinsight.com
+    image: hyperledger/fabric-peer:2.5
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric-net
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_TLS_ENABLED=false
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_PEER_GOSSIP_ORGLEADER=false
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.doctor.medinsight.com:7051
+      - CORE_PEER_ID=peer0.doctor.medinsight.com
+      - CORE_PEER_ADDRESS=peer0.doctor.medinsight.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.doctor.medinsight.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.doctor.medinsight.com:7051
+      - CORE_PEER_LOCALMSPID=DoctorOrgMSP
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9444
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./crypto-config/peerOrganizations/doctor.medinsight.com/peers/peer0.doctor.medinsight.com/msp:/etc/hyperledger/fabric/msp
+      - peer0.doctor.medinsight.com:/var/hyperledger/production
+    ports:
+      - 7051:7051
+      - 9444:9444
+    networks:
+      - fabric-net
+      - medinsight-net
+
+  # ==================== CA PHARMACY ====================
+  ca.pharmacy.medinsight.com:
+    image: hyperledger/fabric-ca:1.5
+    container_name: ca.pharmacy.medinsight.com
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca.pharmacy.medinsight.com
+      - FABRIC_CA_SERVER_TLS_ENABLED=false
+      - FABRIC_CA_SERVER_PORT=8054
+    ports:
+      - "8054:8054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    volumes:
+      - ./crypto-config/peerOrganizations/pharmacy.medinsight.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    networks:
+      - fabric-net
+      - medinsight-net
+
+  # ==================== PEER PHARMACY ====================
+  peer0.pharmacy.medinsight.com:
+    container_name: peer0.pharmacy.medinsight.com
+    image: hyperledger/fabric-peer:2.5
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric-net
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_TLS_ENABLED=false
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_PEER_GOSSIP_ORGLEADER=false
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.pharmacy.medinsight.com:9051
+      - CORE_PEER_ID=peer0.pharmacy.medinsight.com
+      - CORE_PEER_ADDRESS=peer0.pharmacy.medinsight.com:9051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.pharmacy.medinsight.com:9052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.pharmacy.medinsight.com:9051
+      - CORE_PEER_LOCALMSPID=PharmacyOrgMSP
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9445
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./crypto-config/peerOrganizations/pharmacy.medinsight.com/peers/peer0.pharmacy.medinsight.com/msp:/etc/hyperledger/fabric/msp
+      - peer0.pharmacy.medinsight.com:/var/hyperledger/production
+    ports:
+      - 9051:9051
+      - 9445:9445
+    networks:
+      - fabric-net
+      - medinsight-net
+
+  # ==================== CA PATIENT ====================
+  ca.patient.medinsight.com:
+    image: hyperledger/fabric-ca:1.5
+    container_name: ca.patient.medinsight.com
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca.patient.medinsight.com
+      - FABRIC_CA_SERVER_TLS_ENABLED=false
+      - FABRIC_CA_SERVER_PORT=9054
+    ports:
+      - "9054:9054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    volumes:
+      - ./crypto-config/peerOrganizations/patient.medinsight.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    networks:
+      - fabric-net
+      - medinsight-net
+
+  # ==================== PEER PATIENT ====================
+  peer0.patient.medinsight.com:
+    container_name: peer0.patient.medinsight.com
+    image: hyperledger/fabric-peer:2.5
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric-net
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_TLS_ENABLED=false
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_PEER_GOSSIP_ORGLEADER=false
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.patient.medinsight.com:11051
+      - CORE_PEER_ID=peer0.patient.medinsight.com
+      - CORE_PEER_ADDRESS=peer0.patient.medinsight.com:11051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:11051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.patient.medinsight.com:11052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:11052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.patient.medinsight.com:11051
+      - CORE_PEER_LOCALMSPID=PatientOrgMSP
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9446
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./crypto-config/peerOrganizations/patient.medinsight.com/peers/peer0.patient.medinsight.com/msp:/etc/hyperledger/fabric/msp
+      - peer0.patient.medinsight.com:/var/hyperledger/production
+    ports:
+      - 11051:11051
+      - 9446:9446
+    networks:
+      - fabric-net
+      - medinsight-net
+
+  # ==================== CLI TOOL ====================
+  cli:
+    container_name: cli
+    image: hyperledger/fabric-tools:2.5
+    tty: true
+    stdin_open: true
+    environment:
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=peer0.doctor.medinsight.com:7051
+      - CORE_PEER_LOCALMSPID=DoctorOrgMSP
+      - CORE_PEER_TLS_ENABLED=false
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/doctor.medinsight.com/users/Admin@doctor.medinsight.com/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./chaincode/:/opt/gopath/src/github.com/chaincode
+      - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto
+      - ./channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+    depends_on:
+      - orderer.medinsight.com
+      - peer0.doctor.medinsight.com
+      - peer0.pharmacy.medinsight.com
+      - peer0.patient.medinsight.com
+    networks:
+      - fabric-net
+      - medinsight-net

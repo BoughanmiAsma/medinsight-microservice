@@ -1,0 +1,206 @@
+# Configuration for generating channel artifacts
+# Defines organizations, orderer, and channel profiles
+
+Organizations:
+  - &OrdererOrg
+    Name: OrdererOrg
+    ID: OrdererMSP
+    MSPDir: crypto-config/ordererOrganizations/medinsight.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererMSP.admin')"
+    OrdererEndpoints:
+      - orderer.medinsight.com:7050
+
+  - &DoctorOrg
+    Name: DoctorOrgMSP
+    ID: DoctorOrgMSP
+    MSPDir: crypto-config/peerOrganizations/doctor.medinsight.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('DoctorOrgMSP.admin', 'DoctorOrgMSP.peer', 'DoctorOrgMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('DoctorOrgMSP.admin', 'DoctorOrgMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('DoctorOrgMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('DoctorOrgMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.doctor.medinsight.com
+        Port: 7051
+
+  - &PharmacyOrg
+    Name: PharmacyOrgMSP
+    ID: PharmacyOrgMSP
+    MSPDir: crypto-config/peerOrganizations/pharmacy.medinsight.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('PharmacyOrgMSP.admin', 'PharmacyOrgMSP.peer', 'PharmacyOrgMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('PharmacyOrgMSP.admin', 'PharmacyOrgMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('PharmacyOrgMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('PharmacyOrgMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.pharmacy.medinsight.com
+        Port: 9051
+
+  - &PatientOrg
+    Name: PatientOrgMSP
+    ID: PatientOrgMSP
+    MSPDir: crypto-config/peerOrganizations/patient.medinsight.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('PatientOrgMSP.admin', 'PatientOrgMSP.peer', 'PatientOrgMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('PatientOrgMSP.admin', 'PatientOrgMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('PatientOrgMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('PatientOrgMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.patient.medinsight.com
+        Port: 11051
+
+Capabilities:
+  Channel: &ChannelCapabilities
+    V2_0: true
+  Orderer: &OrdererCapabilities
+    V2_0: true
+  Application: &ApplicationCapabilities
+    V2_0: true
+
+Application: &ApplicationDefaults
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+  Capabilities:
+    <<: *ApplicationCapabilities
+
+Orderer: &OrdererDefaults
+  OrdererType: solo
+  Addresses:
+    - orderer.medinsight.com:7050
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 512 KB
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+  Capabilities:
+    <<: *ChannelCapabilities
+
+Profiles:
+  # Profile for the genesis block
+  MedInsightOrdererGenesis:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *OrdererOrg
+      Capabilities:
+        <<: *OrdererCapabilities
+    Consortiums:
+      MedInsightConsortium:
+        Organizations:
+          - *DoctorOrg
+          - *PharmacyOrg
+          - *PatientOrg
+
+  # Canal Consentement (Consent Channel)
+  ConsentChannel:
+    Consortium: MedInsightConsortium
+    <<: *ChannelDefaults
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *DoctorOrg
+        - *PharmacyOrg
+        - *PatientOrg
+      Capabilities:
+        <<: *ApplicationCapabilities
+
+  # Canal Dossiers (Records Channel)
+  RecordsChannel:
+    Consortium: MedInsightConsortium
+    <<: *ChannelDefaults
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *DoctorOrg
+        - *PharmacyOrg
+        - *PatientOrg
+      Capabilities:
+        <<: *ApplicationCapabilities
+
+  # Canal Ordonnances (Prescriptions Channel)
+  PrescriptionsChannel:
+    Consortium: MedInsightConsortium
+    <<: *ChannelDefaults
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *DoctorOrg
+        - *PharmacyOrg
+        - *PatientOrg
+      Capabilities:
+        <<: *ApplicationCapabilities
