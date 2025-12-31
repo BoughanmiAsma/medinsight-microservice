@@ -44,13 +44,21 @@ Write-Host "Crypto Material Generated Successfully!" -ForegroundColor Green
 Write-Host "=========================================" -ForegroundColor Cyan
 Write-Host ""
 
+# Patch config.yaml for Docker (Linux) compatibility - replace backslashes with forward slashes
+Write-Host "Patching config.yaml files for Linux compatibility..." -ForegroundColor Yellow
+Get-ChildItem -Path $CRYPTO_DIR -Filter "config.yaml" -Recurse | ForEach-Object {
+    (Get-Content $_.FullName) -replace 'cacerts\\', 'cacerts/' | Set-Content $_.FullName
+}
+Write-Host "Patching complete." -ForegroundColor Green
+Write-Host ""
+
 # List generated organizations
 Write-Host "Generated Organizations:" -ForegroundColor Yellow
 Get-ChildItem -Path (Join-Path $CRYPTO_DIR "peerOrganizations") -Directory | ForEach-Object {
     Write-Host "  [OK] $($_.Name)" -ForegroundColor Green
 }
 Get-ChildItem -Path (Join-Path $CRYPTO_DIR "ordererOrganizations") -Directory | ForEach-Object {
-    Write-Host "  ✓ $($_.Name)" -ForegroundColor Green
+    Write-Host "  * $($_.Name)" -ForegroundColor Green
 }
 
 Write-Host ""

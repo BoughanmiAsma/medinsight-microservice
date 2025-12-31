@@ -67,10 +67,10 @@ Write-Host "Generating Anchor Peer Updates..." -ForegroundColor Yellow
 & $CONFIGTXGEN -profile RecordsChannel -outputAnchorPeersUpdate ".\channel-artifacts\PharmacyOrgMSPanchors_records.tx" -channelID recordschannel -asOrg PharmacyOrgMSP
 & $CONFIGTXGEN -profile PrescriptionsChannel -outputAnchorPeersUpdate ".\channel-artifacts\PharmacyOrgMSPanchors_prescriptions.tx" -channelID prescriptionschannel -asOrg PharmacyOrgMSP
 
-# Anchor peer for PatientOrg
-& $CONFIGTXGEN -profile ConsentChannel -outputAnchorPeersUpdate ".\channel-artifacts\PatientOrgMSPanchors_consent.tx" -channelID consentchannel -asOrg PatientOrgMSP
-& $CONFIGTXGEN -profile RecordsChannel -outputAnchorPeersUpdate ".\channel-artifacts\PatientOrgMSPanchors_records.tx" -channelID recordschannel -asOrg PatientOrgMSP
-& $CONFIGTXGEN -profile PrescriptionsChannel -outputAnchorPeersUpdate ".\channel-artifacts\PatientOrgMSPanchors_prescriptions.tx" -channelID prescriptionschannel -asOrg PatientOrgMSP
+# Anchor peer for LabOrg
+& $CONFIGTXGEN -profile ConsentChannel -outputAnchorPeersUpdate ".\channel-artifacts\LabOrgMSPanchors_consent.tx" -channelID consentchannel -asOrg LabOrgMSP
+& $CONFIGTXGEN -profile RecordsChannel -outputAnchorPeersUpdate ".\channel-artifacts\LabOrgMSPanchors_records.tx" -channelID recordschannel -asOrg LabOrgMSP
+& $CONFIGTXGEN -profile PrescriptionsChannel -outputAnchorPeersUpdate ".\channel-artifacts\LabOrgMSPanchors_prescriptions.tx" -channelID prescriptionschannel -asOrg LabOrgMSP
 
 Write-Host ""
 Write-Host "=========================================" -ForegroundColor Cyan

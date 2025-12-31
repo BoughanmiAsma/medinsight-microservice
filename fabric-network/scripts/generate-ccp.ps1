@@ -106,15 +106,15 @@ $CA_PEM = Read-Pem $CA_PEM_PATH
 
 Generate-CCP "pharmacy" "PharmacyOrgMSP" "9051" "8054" $PEER_PEM $CA_PEM
 
-# --- PATIENT ORG ---
-$PEER_PEM_PATH = "$CRYPTO_CONFIG\peerOrganizations\patient.medinsight.com\tlsca\tlsca.patient.medinsight.com-cert.pem"
-$CA_PEM_PATH = "$CRYPTO_CONFIG\peerOrganizations\patient.medinsight.com\ca\ca.patient.medinsight.com-cert.pem"
+# --- LAB ORG ---
+$PEER_PEM_PATH = "$CRYPTO_CONFIG\peerOrganizations\lab.medinsight.com\tlsca\tlsca.lab.medinsight.com-cert.pem"
+$CA_PEM_PATH = "$CRYPTO_CONFIG\peerOrganizations\lab.medinsight.com\ca\ca.lab.medinsight.com-cert.pem"
 
-Write-Host "Reading Patient Certificates..."
+Write-Host "Reading Lab Certificates..."
 $PEER_PEM = Read-Pem $PEER_PEM_PATH
 $CA_PEM = Read-Pem $CA_PEM_PATH
 
-Generate-CCP "patient" "PatientOrgMSP" "11051" "9054" $PEER_PEM $CA_PEM
+Generate-CCP "lab" "LabOrgMSP" "11051" "9054" $PEER_PEM $CA_PEM
 
 Write-Host ""
 Write-Host "Done!" -ForegroundColor Cyan

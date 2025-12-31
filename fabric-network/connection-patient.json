@@ -1,43 +1,43 @@
 {
-    ""name"": ""medinsight-network-patient"",
-    ""version"": ""1.0.0"",
-    ""client"": {
-        ""organization"": ""patient""
+    "name": "medinsight-network-patient",
+    "version": "1.0.0",
+    "client": {
+        "organization": "patient"
     },
-    ""organizations"": {
-        ""patient"": {
-            ""mspid"": ""PatientOrgMSP"",
-            ""peers"": [
-                ""peer0.patient.medinsight.com""
+    "organizations": {
+        "patient": {
+            "mspid": "PatientOrgMSP",
+            "peers": [
+                "peer0.patient.medinsight.com"
             ],
-            ""certificateAuthorities"": [
-                ""ca.patient.medinsight.com""
+            "certificateAuthorities": [
+                "ca.patient.medinsight.com"
             ]
         }
     },
-    ""peers"": {
-        ""peer0.patient.medinsight.com"": {
-            ""url"": ""grpcs://localhost:11051"",
-            ""tlsCACerts"": {
-                ""pem"": ""-----BEGIN CERTIFICATE-----\nMIICcTCCAhegAwIBAgIQbXelaLZp6VzHbilLaEQRfDAKBggqhkjOPQQDAjCBgjEL\nMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG\ncmFuY2lzY28xHzAdBgNVBAoTFnBhdGllbnQubWVkaW5zaWdodC5jb20xJTAjBgNV\nBAMTHHRsc2NhLnBhdGllbnQubWVkaW5zaWdodC5jb20wHhcNMjUxMjMwMTMyMjAw\nWhcNMzUxMjI4MTMyMjAwWjCBgjELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlm\nb3JuaWExFjAUBgNVBAcTDVNhbiBGcmFuY2lzY28xHzAdBgNVBAoTFnBhdGllbnQu\nbWVkaW5zaWdodC5jb20xJTAjBgNVBAMTHHRsc2NhLnBhdGllbnQubWVkaW5zaWdo\ndC5jb20wWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAATuU21npbpjaFdvMHMhT7yx\n70zkx/HRi5VnIk3TS72B0zivzRV9ZUoTNarWNW2giIE9i6tM71wO6QlTgc6l4Cw3\no20wazAOBgNVHQ8BAf8EBAMCAaYwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUF\nBwMBMA8GA1UdEwEB/wQFMAMBAf8wKQYDVR0OBCIEIEuGPCAKkfGdn7wV6j2od/mO\nVaSlIcme3y1Vk+NpuDe3MAoGCCqGSM49BAMCA0gAMEUCIQCGGPVNa1/vu4+mtz3K\nhUHPhA8t4sMV0w6gEXrD1NTqpgIgdQTyfIUzvAbeaH3ZGDyN/irz3CkSteP/W682\nQih2+zM=\n-----END CERTIFICATE-----\n""
+    "peers": {
+        "peer0.patient.medinsight.com": {
+            "url": "grpcs://localhost:11051",
+            "tlsCACerts": {
+                "pem": "-----BEGIN CERTIFICATE-----\nMIICcTCCAhegAwIBAgIQbXelaLZp6VzHbilLaEQRfDAKBggqhkjOPQQDAjCBgjEL\nMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG\ncmFuY2lzY28xHzAdBgNVBAoTFnBhdGllbnQubWVkaW5zaWdodC5jb20xJTAjBgNV\nBAMTHHRsc2NhLnBhdGllbnQubWVkaW5zaWdodC5jb20wHhcNMjUxMjMwMTMyMjAw\nWhcNMzUxMjI4MTMyMjAwWjCBgjELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlm\nb3JuaWExFjAUBgNVBAcTDVNhbiBGcmFuY2lzY28xHzAdBgNVBAoTFnBhdGllbnQu\nbWVkaW5zaWdodC5jb20xJTAjBgNVBAMTHHRsc2NhLnBhdGllbnQubWVkaW5zaWdo\ndC5jb20wWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAATuU21npbpjaFdvMHMhT7yx\n70zkx/HRi5VnIk3TS72B0zivzRV9ZUoTNarWNW2giIE9i6tM71wO6QlTgc6l4Cw3\no20wazAOBgNVHQ8BAf8EBAMCAaYwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUF\nBwMBMA8GA1UdEwEB/wQFMAMBAf8wKQYDVR0OBCIEIEuGPCAKkfGdn7wV6j2od/mO\nVaSlIcme3y1Vk+NpuDe3MAoGCCqGSM49BAMCA0gAMEUCIQCGGPVNa1/vu4+mtz3K\nhUHPhA8t4sMV0w6gEXrD1NTqpgIgdQTyfIUzvAbeaH3ZGDyN/irz3CkSteP/W682\nQih2+zM=\n-----END CERTIFICATE-----\n"
             },
-            ""grpcOptions"": {
-                ""ssl-target-name-override"": ""peer0.patient.medinsight.com"",
-                ""hostnameOverride"": ""peer0.patient.medinsight.com""
+            "grpcOptions": {
+                "ssl-target-name-override": "peer0.patient.medinsight.com",
+                "hostnameOverride": "peer0.patient.medinsight.com"
             }
         }
     },
-    ""certificateAuthorities"": {
-        ""ca.patient.medinsight.com"": {
-            ""url"": ""https://localhost:9054"",
-            ""caName"": ""ca.patient.medinsight.com"",
-            ""tlsCACerts"": {
-                ""pem"": [
-                    ""-----BEGIN CERTIFICATE-----\nMIICaTCCAg+gAwIBAgIQF9ysRPOQ0pCZqxTGOZUTxjAKBggqhkjOPQQDAjB/MQsw\nCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZy\nYW5jaXNjbzEfMB0GA1UEChMWcGF0aWVudC5tZWRpbnNpZ2h0LmNvbTEiMCAGA1UE\nAxMZY2EucGF0aWVudC5tZWRpbnNpZ2h0LmNvbTAeFw0yNTEyMzAxMzIyMDBaFw0z\nNTEyMjgxMzIyMDBaMH8xCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlh\nMRYwFAYDVQQHEw1TYW4gRnJhbmNpc2NvMR8wHQYDVQQKExZwYXRpZW50Lm1lZGlu\nc2lnaHQuY29tMSIwIAYDVQQDExljYS5wYXRpZW50Lm1lZGluc2lnaHQuY29tMFkw\nEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE/QPapn9MmLoqQkiW6xxGoIINYdPy5qZ5\ntq3VsfMJpr/iNojQV3FALMsKERgTZKbZw2/x0jd78iaJVyXTUlrNWaNtMGswDgYD\nVR0PAQH/BAQDAgGmMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcDATAPBgNV\nHRMBAf8EBTADAQH/MCkGA1UdDgQiBCCreBvZ9/K1WM/THZY9ShFwOLv90SlXQhoI\nU6BAeXC1wzAKBggqhkjOPQQDAgNIADBFAiAN0VOaAJSqKDqfstpMHcp819EeqLhN\nVUv6z+R+9/LsngIhAKa3ZI6kgByII1sVMTjcamaN54mpuaDqx35hn/Qh+Wbt\n-----END CERTIFICATE-----\n""
+    "certificateAuthorities": {
+        "ca.patient.medinsight.com": {
+            "url": "https://localhost:9054",
+            "caName": "ca.patient.medinsight.com",
+            "tlsCACerts": {
+                "pem": [
+                    "-----BEGIN CERTIFICATE-----\nMIICaTCCAg+gAwIBAgIQF9ysRPOQ0pCZqxTGOZUTxjAKBggqhkjOPQQDAjB/MQsw\nCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZy\nYW5jaXNjbzEfMB0GA1UEChMWcGF0aWVudC5tZWRpbnNpZ2h0LmNvbTEiMCAGA1UE\nAxMZY2EucGF0aWVudC5tZWRpbnNpZ2h0LmNvbTAeFw0yNTEyMzAxMzIyMDBaFw0z\nNTEyMjgxMzIyMDBaMH8xCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlh\nMRYwFAYDVQQHEw1TYW4gRnJhbmNpc2NvMR8wHQYDVQQKExZwYXRpZW50Lm1lZGlu\nc2lnaHQuY29tMSIwIAYDVQQDExljYS5wYXRpZW50Lm1lZGluc2lnaHQuY29tMFkw\nEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE/QPapn9MmLoqQkiW6xxGoIINYdPy5qZ5\ntq3VsfMJpr/iNojQV3FALMsKERgTZKbZw2/x0jd78iaJVyXTUlrNWaNtMGswDgYD\nVR0PAQH/BAQDAgGmMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcDATAPBgNV\nHRMBAf8EBTADAQH/MCkGA1UdDgQiBCCreBvZ9/K1WM/THZY9ShFwOLv90SlXQhoI\nU6BAeXC1wzAKBggqhkjOPQQDAgNIADBFAiAN0VOaAJSqKDqfstpMHcp819EeqLhN\nVUv6z+R+9/LsngIhAKa3ZI6kgByII1sVMTjcamaN54mpuaDqx35hn/Qh+Wbt\n-----END CERTIFICATE-----\n"
                 ]
             },
-            ""httpOptions"": {
-                ""verify"": false
+            "httpOptions": {
+                "verify": false
             }
         }
     }

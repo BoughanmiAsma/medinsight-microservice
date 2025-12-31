@@ -86,8 +86,8 @@ Setup-Identity "doctor" "ca.doctor.medinsight.com:7054" "admin" "adminpw" "dossi
 # CA: ca.pharmacy.medinsight.com:8054
 Setup-Identity "pharmacy" "ca.pharmacy.medinsight.com:8054" "admin" "adminpw" "pharmacyAppUser" "pharmacyAppPw" "PharmacyOrgMSP"
 
-# --- Patient ---
-# CA: ca.patient.medinsight.com:9054
-Setup-Identity "patient" "ca.patient.medinsight.com:9054" "admin" "adminpw" "labAppUser" "labAppPw" "PatientOrgMSP"
+# --- Lab ---
+# CA: ca.lab.medinsight.com:9054
+Setup-Identity "lab" "ca.lab.medinsight.com:9054" "admin" "adminpw" "labAppUser" "labAppPw" "LabOrgMSP"
 
 Write-Host "Done!" -ForegroundColor Cyan

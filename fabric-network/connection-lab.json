@@ -1,0 +1,44 @@
+{
+    "name": "medinsight-network-lab",
+    "version": "1.0.0",
+    "client": {
+        "organization": "lab"
+    },
+    "organizations": {
+        "lab": {
+            "mspid": "LabOrgMSP",
+            "peers": [
+                "peer0.lab.medinsight.com"
+            ],
+            "certificateAuthorities": [
+                "ca.lab.medinsight.com"
+            ]
+        }
+    },
+    "peers": {
+        "peer0.lab.medinsight.com": {
+            "url": "grpcs://localhost:11051",
+            "tlsCACerts": {
+                "pem": "-----BEGIN CERTIFICATE-----\nMIICYDCCAgagAwIBAgIRANZuFP3B5Ts/+Z2G77sUc1YwCgYIKoZIzj0EAwIwejEL\nMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG\ncmFuY2lzY28xGzAZBgNVBAoTEmxhYi5tZWRpbnNpZ2h0LmNvbTEhMB8GA1UEAxMY\ndGxzY2EubGFiLm1lZGluc2lnaHQuY29tMB4XDTI1MTIzMDIxMDMwMFoXDTM1MTIy\nODIxMDMwMFowejELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAU\nBgNVBAcTDVNhbiBGcmFuY2lzY28xGzAZBgNVBAoTEmxhYi5tZWRpbnNpZ2h0LmNv\nbTEhMB8GA1UEAxMYdGxzY2EubGFiLm1lZGluc2lnaHQuY29tMFkwEwYHKoZIzj0C\nAQYIKoZIzj0DAQcDQgAEv/V4HHJIDRWyRxvp1BF6GHaYrBbbrdAb/Ipijrukrypo\nCPjcz7/YD9h58So/039dKud0egl5jK1s4SpEMWz9rqNtMGswDgYDVR0PAQH/BAQD\nAgGmMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcDATAPBgNVHRMBAf8EBTAD\nAQH/MCkGA1UdDgQiBCCkt4deMR+us/eVZLp6K3JOyC1dF4JDZ389/Ohv7bg24jAK\nBggqhkjOPQQDAgNIADBFAiEArsXWbQM/evgmHjFK85gIEAqSiS4LyJmtM3BBwZcL\njDsCIDfp7EqVL/veHilDq12QcSw/kmuK0RXcUaEuj+EedZ74\n-----END CERTIFICATE-----\n"
+            },
+            "grpcOptions": {
+                "ssl-target-name-override": "peer0.lab.medinsight.com",
+                "hostnameOverride": "peer0.lab.medinsight.com"
+            }
+        }
+    },
+    "certificateAuthorities": {
+        "ca.lab.medinsight.com": {
+            "url": "https://localhost:9054",
+            "caName": "ca.lab.medinsight.com",
+            "tlsCACerts": {
+                "pem": [
+                    "-----BEGIN CERTIFICATE-----\nMIICWjCCAgCgAwIBAgIRAJ8g82JurxjBBsMDNOzs0SUwCgYIKoZIzj0EAwIwdzEL\nMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG\ncmFuY2lzY28xGzAZBgNVBAoTEmxhYi5tZWRpbnNpZ2h0LmNvbTEeMBwGA1UEAxMV\nY2EubGFiLm1lZGluc2lnaHQuY29tMB4XDTI1MTIzMDIxMDMwMFoXDTM1MTIyODIx\nMDMwMFowdzELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNV\nBAcTDVNhbiBGcmFuY2lzY28xGzAZBgNVBAoTEmxhYi5tZWRpbnNpZ2h0LmNvbTEe\nMBwGA1UEAxMVY2EubGFiLm1lZGluc2lnaHQuY29tMFkwEwYHKoZIzj0CAQYIKoZI\nzj0DAQcDQgAEjdomiXg2Kse0uHXuUnkfKxR70jAtnuLeg+brOJw9jj/W537qt2gT\nzDOuN2HqX4HPOra+qNvelZsWA1L5E6W1z6NtMGswDgYDVR0PAQH/BAQDAgGmMB0G\nA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcDATAPBgNVHRMBAf8EBTADAQH/MCkG\nA1UdDgQiBCBcBUBncDSUCmsmANralPPtbT6okg2T2gxFp9lHII56gjAKBggqhkjO\nPQQDAgNIADBFAiEAqJaLlCTu27WqrIkOZpZOyoQMco55WqEmDcYpT6WdRCECIGKt\ngDUc0la+o3j+uLgOIIudV+YzWbhxViw/XSJ+9I+1\n-----END CERTIFICATE-----\n"
+                ]
+            },
+            "httpOptions": {
+                "verify": false
+            }
+        }
+    }
+}

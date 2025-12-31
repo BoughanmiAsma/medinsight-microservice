@@ -61,25 +61,25 @@ Organizations:
       - Host: peer0.pharmacy.medinsight.com
         Port: 9051
 
-  - &PatientOrg
-    Name: PatientOrgMSP
-    ID: PatientOrgMSP
-    MSPDir: crypto-config/peerOrganizations/patient.medinsight.com/msp
+  - &LabOrg
+    Name: LabOrgMSP
+    ID: LabOrgMSP
+    MSPDir: crypto-config/peerOrganizations/lab.medinsight.com/msp
     Policies:
       Readers:
         Type: Signature
-        Rule: "OR('PatientOrgMSP.admin', 'PatientOrgMSP.peer', 'PatientOrgMSP.client')"
+        Rule: "OR('LabOrgMSP.admin', 'LabOrgMSP.peer', 'LabOrgMSP.client')"
       Writers:
         Type: Signature
-        Rule: "OR('PatientOrgMSP.admin', 'PatientOrgMSP.client')"
+        Rule: "OR('LabOrgMSP.admin', 'LabOrgMSP.client')"
       Admins:
         Type: Signature
-        Rule: "OR('PatientOrgMSP.admin')"
+        Rule: "OR('LabOrgMSP.admin')"
       Endorsement:
         Type: Signature
-        Rule: "OR('PatientOrgMSP.peer')"
+        Rule: "OR('LabOrgMSP.peer')"
     AnchorPeers:
-      - Host: peer0.patient.medinsight.com
+      - Host: peer0.lab.medinsight.com
         Port: 11051
 
 Capabilities:
@@ -164,7 +164,7 @@ Profiles:
         Organizations:
           - *DoctorOrg
           - *PharmacyOrg
-          - *PatientOrg
+          - *LabOrg
 
   # Canal Consentement (Consent Channel)
   ConsentChannel:
@@ -175,7 +175,7 @@ Profiles:
       Organizations:
         - *DoctorOrg
         - *PharmacyOrg
-        - *PatientOrg
+        - *LabOrg
       Capabilities:
         <<: *ApplicationCapabilities
 
@@ -188,7 +188,7 @@ Profiles:
       Organizations:
         - *DoctorOrg
         - *PharmacyOrg
-        - *PatientOrg
+        - *LabOrg
       Capabilities:
         <<: *ApplicationCapabilities
 
@@ -201,6 +201,6 @@ Profiles:
       Organizations:
         - *DoctorOrg
         - *PharmacyOrg
-        - *PatientOrg
+        - *LabOrg
       Capabilities:
         <<: *ApplicationCapabilities

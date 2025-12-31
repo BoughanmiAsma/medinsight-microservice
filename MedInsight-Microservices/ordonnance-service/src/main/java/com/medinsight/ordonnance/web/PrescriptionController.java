@@ -1,10 +1,10 @@
 package com.medinsight.ordonnance.web;
 
 import org.springframework.web.bind.annotation.*;
-import com.medinsight.ordonnance.domain.Prescription;
+// import com.medinsight.ordonnance.domain.Prescription;
 import com.medinsight.ordonnance.repository.PrescriptionRepository;
 import lombok.RequiredArgsConstructor;
-import java.util.List;
+// import java.util.List;
 
 import com.medinsight.ordonnance.security.UserContext;
 import org.springframework.http.HttpStatus;

@@ -57,7 +57,7 @@ services:
 
   # ==================== MICROSERVICES ====================
   dossier-service:
-    build: 
+    build:
       context: ./dossier-service
       dockerfile: Dockerfile
     container_name: dossier-service
@@ -71,11 +71,18 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       # Keycloak (Using host.docker.internal because Keycloak is in another stack)
       KEYCLOAK_SERVER_URL: http://host.docker.internal:8180
+      # Hyperledger Fabric
+      FABRIC_WALLET_PATH: /app/wallet
+      FABRIC_CONNECTION_PROFILE: /app/connection-doctor.json
+    volumes:
+      - ../fabric-network/connection-doctor.json:/app/connection-doctor.json
+      - ../fabric-network/wallets/doctor/dossierAppUser:/app/wallet
     depends_on:
       - postgres
       - kafka
     networks:
       - medinsight-net
+      - fabric-net
 
   lab-service:
     build:
@@ -92,6 +99,12 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       # Keycloak
       KEYCLOAK_SERVER_URL: http://host.docker.internal:8180
+      # Hyperledger Fabric
+      FABRIC_WALLET_PATH: /app/wallet
+      FABRIC_CONNECTION_PROFILE: /app/connection-lab.json
+    volumes:
+      - ../fabric-network/connection-lab.json:/app/connection-lab.json
+      - ../fabric-network/wallets/lab/labAppUser:/app/wallet
     depends_on:
       - postgres
       - kafka
@@ -141,6 +154,9 @@ services:
 networks:
   medinsight-net:
     driver: bridge
+  fabric-net:
+    external: true
+    name: fabric-net
 
 volumes:
   postgres-data:
