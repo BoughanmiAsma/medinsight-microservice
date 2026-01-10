@@ -21,12 +21,18 @@ L'intégration de PatientOrg est maintenant 100% complète. Voici ce que nous av
 
 
 🔍 Test Final de Confirmation
+
 Lançons une petite commande de vérification pour lister les chaincodes engagés sur le channel des dossiers médicaux :
 
 powershell
+
 docker exec cli peer lifecycle chaincode querycommitted --channelID recordschannel
+
 Et pour le plaisir, vérifiez que le peer PatientOrg est bien au courant :
 
 powershell
+
 docker exec -e CORE_PEER_LOCALMSPID=PatientOrgMSP -e CORE_PEER_ADDRESS=peer0.patient.medinsight.com:13051 -e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/patient.medinsight.com/users/Admin@patient.medinsight.com/msp cli peer lifecycle chaincode querycommitted --channelID recordschannel
+
+
 🎯 Mission Terminée
