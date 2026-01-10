@@ -81,7 +81,8 @@ function Commit-Chaincode {
         --sequence ${CC_SEQUENCE} `
         --peerAddresses peer0.doctor.medinsight.com:7051 `
         --peerAddresses peer0.pharmacy.medinsight.com:9051 `
-        --peerAddresses peer0.lab.medinsight.com:11051
+        --peerAddresses peer0.lab.medinsight.com:11051 `
+        --peerAddresses peer0.patient.medinsight.com:13051
 }
 
 # ========== DEPLOY MEDICAL RECORDS CHAINCODE ==========
@@ -95,6 +96,7 @@ Package-Chaincode "medical-records" "medical-records"
 Install-Chaincode "medical-records" "peer0.doctor.medinsight.com:7051" "DoctorOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/doctor.medinsight.com/users/Admin@doctor.medinsight.com/msp"
 Install-Chaincode "medical-records" "peer0.pharmacy.medinsight.com:9051" "PharmacyOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/pharmacy.medinsight.com/users/Admin@pharmacy.medinsight.com/msp"
 Install-Chaincode "medical-records" "peer0.lab.medinsight.com:11051" "LabOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/lab.medinsight.com/users/Admin@lab.medinsight.com/msp"
+Install-Chaincode "medical-records" "peer0.patient.medinsight.com:13051" "PatientOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/patient.medinsight.com/users/Admin@patient.medinsight.com/msp"
 
 # Query installed chaincode to get package ID
 Write-Host "Querying installed chaincode..." -ForegroundColor Yellow
@@ -123,6 +125,7 @@ Write-Host "Package ID: ${PACKAGE_ID}" -ForegroundColor Cyan
 Approve-Chaincode "medical-records" "recordschannel" "peer0.doctor.medinsight.com:7051" "DoctorOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/doctor.medinsight.com/users/Admin@doctor.medinsight.com/msp" "${PACKAGE_ID}"
 Approve-Chaincode "medical-records" "recordschannel" "peer0.pharmacy.medinsight.com:9051" "PharmacyOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/pharmacy.medinsight.com/users/Admin@pharmacy.medinsight.com/msp" "${PACKAGE_ID}"
 Approve-Chaincode "medical-records" "recordschannel" "peer0.lab.medinsight.com:11051" "LabOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/lab.medinsight.com/users/Admin@lab.medinsight.com/msp" "${PACKAGE_ID}"
+Approve-Chaincode "medical-records" "recordschannel" "peer0.patient.medinsight.com:13051" "PatientOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/patient.medinsight.com/users/Admin@patient.medinsight.com/msp" "${PACKAGE_ID}"
 
 # Commit
 Commit-Chaincode "medical-records" "recordschannel"
@@ -138,6 +141,7 @@ Package-Chaincode "consent" "consent"
 Install-Chaincode "consent" "peer0.doctor.medinsight.com:7051" "DoctorOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/doctor.medinsight.com/users/Admin@doctor.medinsight.com/msp"
 Install-Chaincode "consent" "peer0.pharmacy.medinsight.com:9051" "PharmacyOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/pharmacy.medinsight.com/users/Admin@pharmacy.medinsight.com/msp"
 Install-Chaincode "consent" "peer0.lab.medinsight.com:11051" "LabOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/lab.medinsight.com/users/Admin@lab.medinsight.com/msp"
+Install-Chaincode "consent" "peer0.patient.medinsight.com:13051" "PatientOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/patient.medinsight.com/users/Admin@patient.medinsight.com/msp"
 
 # Get Package ID
 $RAW_OUTPUT = docker exec cli peer lifecycle chaincode queryinstalled
@@ -162,6 +166,7 @@ Write-Host "Package ID: ${PACKAGE_ID}" -ForegroundColor Cyan
 Approve-Chaincode "consent" "consentchannel" "peer0.doctor.medinsight.com:7051" "DoctorOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/doctor.medinsight.com/users/Admin@doctor.medinsight.com/msp" "${PACKAGE_ID}"
 Approve-Chaincode "consent" "consentchannel" "peer0.pharmacy.medinsight.com:9051" "PharmacyOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/pharmacy.medinsight.com/users/Admin@pharmacy.medinsight.com/msp" "${PACKAGE_ID}"
 Approve-Chaincode "consent" "consentchannel" "peer0.lab.medinsight.com:11051" "LabOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/lab.medinsight.com/users/Admin@lab.medinsight.com/msp" "${PACKAGE_ID}"
+Approve-Chaincode "consent" "consentchannel" "peer0.patient.medinsight.com:13051" "PatientOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/patient.medinsight.com/users/Admin@patient.medinsight.com/msp" "${PACKAGE_ID}"
 
 # Commit
 Commit-Chaincode "consent" "consentchannel"
@@ -177,6 +182,7 @@ Package-Chaincode "prescriptions" "prescriptions"
 Install-Chaincode "prescriptions" "peer0.doctor.medinsight.com:7051" "DoctorOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/doctor.medinsight.com/users/Admin@doctor.medinsight.com/msp"
 Install-Chaincode "prescriptions" "peer0.pharmacy.medinsight.com:9051" "PharmacyOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/pharmacy.medinsight.com/users/Admin@pharmacy.medinsight.com/msp"
 Install-Chaincode "prescriptions" "peer0.lab.medinsight.com:11051" "LabOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/lab.medinsight.com/users/Admin@lab.medinsight.com/msp"
+Install-Chaincode "prescriptions" "peer0.patient.medinsight.com:13051" "PatientOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/patient.medinsight.com/users/Admin@patient.medinsight.com/msp"
 
 # Get Package ID
 $RAW_OUTPUT = docker exec cli peer lifecycle chaincode queryinstalled
@@ -201,6 +207,7 @@ Write-Host "Package ID: ${PACKAGE_ID}" -ForegroundColor Cyan
 Approve-Chaincode "prescriptions" "prescriptionschannel" "peer0.doctor.medinsight.com:7051" "DoctorOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/doctor.medinsight.com/users/Admin@doctor.medinsight.com/msp" "${PACKAGE_ID}"
 Approve-Chaincode "prescriptions" "prescriptionschannel" "peer0.pharmacy.medinsight.com:9051" "PharmacyOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/pharmacy.medinsight.com/users/Admin@pharmacy.medinsight.com/msp" "${PACKAGE_ID}"
 Approve-Chaincode "prescriptions" "prescriptionschannel" "peer0.lab.medinsight.com:11051" "LabOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/lab.medinsight.com/users/Admin@lab.medinsight.com/msp" "${PACKAGE_ID}"
+Approve-Chaincode "prescriptions" "prescriptionschannel" "peer0.patient.medinsight.com:13051" "PatientOrgMSP" "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/patient.medinsight.com/users/Admin@patient.medinsight.com/msp" "${PACKAGE_ID}"
 
 # Commit
 Commit-Chaincode "prescriptions" "prescriptionschannel"

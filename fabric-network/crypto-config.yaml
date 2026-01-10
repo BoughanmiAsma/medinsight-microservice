@@ -35,3 +35,12 @@ PeerOrgs:
       Count: 1
     Users:
       Count: 1
+    
+  # Organisation des Patients (PatientOrg)
+  - Name: PatientOrg
+    Domain: patient.medinsight.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1

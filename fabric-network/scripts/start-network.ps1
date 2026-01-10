@@ -45,7 +45,7 @@ if ($LASTEXITCODE -ne 0) {
 # Wait for containers to start
 Write-Host ""
 Write-Host "Waiting for containers to initialize..." -ForegroundColor Yellow
-Start-Sleep -Seconds 10
+Start-Sleep -Seconds 15
 
 # Step 4: Create Channels
 Write-Host ""
@@ -85,6 +85,12 @@ docker exec -e CORE_PEER_LOCALMSPID=LabOrgMSP -e CORE_PEER_ADDRESS=peer0.lab.med
 docker exec -e CORE_PEER_LOCALMSPID=LabOrgMSP -e CORE_PEER_ADDRESS=peer0.lab.medinsight.com:11051 -e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/lab.medinsight.com/users/Admin@lab.medinsight.com/msp cli peer channel join -b ./channel-artifacts/recordschannel.block
 docker exec -e CORE_PEER_LOCALMSPID=LabOrgMSP -e CORE_PEER_ADDRESS=peer0.lab.medinsight.com:11051 -e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/lab.medinsight.com/users/Admin@lab.medinsight.com/msp cli peer channel join -b ./channel-artifacts/prescriptionschannel.block
 
+# Join PatientOrg peer to all channels
+Write-Host "- Joining PatientOrg peer to channels..." -ForegroundColor Gray
+docker exec -e CORE_PEER_LOCALMSPID=PatientOrgMSP -e CORE_PEER_ADDRESS=peer0.patient.medinsight.com:13051 -e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/patient.medinsight.com/users/Admin@patient.medinsight.com/msp cli peer channel join -b ./channel-artifacts/consentchannel.block
+docker exec -e CORE_PEER_LOCALMSPID=PatientOrgMSP -e CORE_PEER_ADDRESS=peer0.patient.medinsight.com:13051 -e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/patient.medinsight.com/users/Admin@patient.medinsight.com/msp cli peer channel join -b ./channel-artifacts/recordschannel.block
+docker exec -e CORE_PEER_LOCALMSPID=PatientOrgMSP -e CORE_PEER_ADDRESS=peer0.patient.medinsight.com:13051 -e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/patient.medinsight.com/users/Admin@patient.medinsight.com/msp cli peer channel join -b ./channel-artifacts/prescriptionschannel.block
+
 # Step 6: Update Anchor Peers
 Write-Host ""
 Write-Host "Step 6: Updating Anchor Peers..." -ForegroundColor Yellow
@@ -93,16 +99,19 @@ Write-Host "Step 6: Updating Anchor Peers..." -ForegroundColor Yellow
 docker exec -e CORE_PEER_LOCALMSPID=DoctorOrgMSP -e CORE_PEER_ADDRESS=peer0.doctor.medinsight.com:7051 -e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/doctor.medinsight.com/users/Admin@doctor.medinsight.com/msp cli peer channel update -o orderer.medinsight.com:7050 -c consentchannel -f ./channel-artifacts/DoctorOrgMSPanchors_consent.tx
 docker exec -e CORE_PEER_LOCALMSPID=PharmacyOrgMSP -e CORE_PEER_ADDRESS=peer0.pharmacy.medinsight.com:9051 -e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/pharmacy.medinsight.com/users/Admin@pharmacy.medinsight.com/msp cli peer channel update -o orderer.medinsight.com:7050 -c consentchannel -f ./channel-artifacts/PharmacyOrgMSPanchors_consent.tx
 docker exec -e CORE_PEER_LOCALMSPID=LabOrgMSP -e CORE_PEER_ADDRESS=peer0.lab.medinsight.com:11051 -e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/lab.medinsight.com/users/Admin@lab.medinsight.com/msp cli peer channel update -o orderer.medinsight.com:7050 -c consentchannel -f ./channel-artifacts/LabOrgMSPanchors_consent.tx
+docker exec -e CORE_PEER_LOCALMSPID=PatientOrgMSP -e CORE_PEER_ADDRESS=peer0.patient.medinsight.com:13051 -e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/patient.medinsight.com/users/Admin@patient.medinsight.com/msp cli peer channel update -o orderer.medinsight.com:7050 -c consentchannel -f ./channel-artifacts/PatientOrgMSPanchors_consent.tx
 
 # Update anchor peers for RecordsChannel
 docker exec -e CORE_PEER_LOCALMSPID=DoctorOrgMSP -e CORE_PEER_ADDRESS=peer0.doctor.medinsight.com:7051 -e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/doctor.medinsight.com/users/Admin@doctor.medinsight.com/msp cli peer channel update -o orderer.medinsight.com:7050 -c recordschannel -f ./channel-artifacts/DoctorOrgMSPanchors_records.tx
 docker exec -e CORE_PEER_LOCALMSPID=PharmacyOrgMSP -e CORE_PEER_ADDRESS=peer0.pharmacy.medinsight.com:9051 -e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/pharmacy.medinsight.com/users/Admin@pharmacy.medinsight.com/msp cli peer channel update -o orderer.medinsight.com:7050 -c recordschannel -f ./channel-artifacts/PharmacyOrgMSPanchors_records.tx
 docker exec -e CORE_PEER_LOCALMSPID=LabOrgMSP -e CORE_PEER_ADDRESS=peer0.lab.medinsight.com:11051 -e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/lab.medinsight.com/users/Admin@lab.medinsight.com/msp cli peer channel update -o orderer.medinsight.com:7050 -c recordschannel -f ./channel-artifacts/LabOrgMSPanchors_records.tx
+docker exec -e CORE_PEER_LOCALMSPID=PatientOrgMSP -e CORE_PEER_ADDRESS=peer0.patient.medinsight.com:13051 -e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/patient.medinsight.com/users/Admin@patient.medinsight.com/msp cli peer channel update -o orderer.medinsight.com:7050 -c recordschannel -f ./channel-artifacts/PatientOrgMSPanchors_records.tx
 
 # Update anchor peers for PrescriptionsChannel
 docker exec -e CORE_PEER_LOCALMSPID=DoctorOrgMSP -e CORE_PEER_ADDRESS=peer0.doctor.medinsight.com:7051 -e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/doctor.medinsight.com/users/Admin@doctor.medinsight.com/msp cli peer channel update -o orderer.medinsight.com:7050 -c prescriptionschannel -f ./channel-artifacts/DoctorOrgMSPanchors_prescriptions.tx
 docker exec -e CORE_PEER_LOCALMSPID=PharmacyOrgMSP -e CORE_PEER_ADDRESS=peer0.pharmacy.medinsight.com:9051 -e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/pharmacy.medinsight.com/users/Admin@pharmacy.medinsight.com/msp cli peer channel update -o orderer.medinsight.com:7050 -c prescriptionschannel -f ./channel-artifacts/PharmacyOrgMSPanchors_prescriptions.tx
 docker exec -e CORE_PEER_LOCALMSPID=LabOrgMSP -e CORE_PEER_ADDRESS=peer0.lab.medinsight.com:11051 -e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/lab.medinsight.com/users/Admin@lab.medinsight.com/msp cli peer channel update -o orderer.medinsight.com:7050 -c prescriptionschannel -f ./channel-artifacts/LabOrgMSPanchors_prescriptions.tx
+docker exec -e CORE_PEER_LOCALMSPID=PatientOrgMSP -e CORE_PEER_ADDRESS=peer0.patient.medinsight.com:13051 -e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/patient.medinsight.com/users/Admin@patient.medinsight.com/msp cli peer channel update -o orderer.medinsight.com:7050 -c prescriptionschannel -f ./channel-artifacts/PatientOrgMSPanchors_prescriptions.tx
 
 Write-Host ""
 Write-Host "=========================================" -ForegroundColor Cyan

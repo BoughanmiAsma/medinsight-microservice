@@ -72,6 +72,11 @@ Write-Host "Generating Anchor Peer Updates..." -ForegroundColor Yellow
 & $CONFIGTXGEN -profile RecordsChannel -outputAnchorPeersUpdate ".\channel-artifacts\LabOrgMSPanchors_records.tx" -channelID recordschannel -asOrg LabOrgMSP
 & $CONFIGTXGEN -profile PrescriptionsChannel -outputAnchorPeersUpdate ".\channel-artifacts\LabOrgMSPanchors_prescriptions.tx" -channelID prescriptionschannel -asOrg LabOrgMSP
 
+# Anchor peer for PatientOrg
+& $CONFIGTXGEN -profile ConsentChannel -outputAnchorPeersUpdate ".\channel-artifacts\PatientOrgMSPanchors_consent.tx" -channelID consentchannel -asOrg PatientOrgMSP
+& $CONFIGTXGEN -profile RecordsChannel -outputAnchorPeersUpdate ".\channel-artifacts\PatientOrgMSPanchors_records.tx" -channelID recordschannel -asOrg PatientOrgMSP
+& $CONFIGTXGEN -profile PrescriptionsChannel -outputAnchorPeersUpdate ".\channel-artifacts\PatientOrgMSPanchors_prescriptions.tx" -channelID prescriptionschannel -asOrg PatientOrgMSP
+
 Write-Host ""
 Write-Host "=========================================" -ForegroundColor Cyan
 Write-Host "Genesis Block and Channel Artifacts Generated Successfully!" -ForegroundColor Green
