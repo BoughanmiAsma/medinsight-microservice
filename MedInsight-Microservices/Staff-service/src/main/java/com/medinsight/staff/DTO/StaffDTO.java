@@ -1,11 +1,10 @@
-package com.medinsight.staff.DTO;
+package com.medinsight.staff.dto;
 
-import com.medinsight.staff.entities.StaffType;
+import com.medinsight.staff.domain.StaffType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 
 @Data
@@ -14,6 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 public class StaffDTO {
     private Long id;
+    private String keycloakId;
     private String nom;
     private String prenom;
     private String email;
@@ -25,5 +25,4 @@ public class StaffDTO {
     private LocalDateTime dateEmbauche;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private String keycloakId; // nouvel attribut
 }

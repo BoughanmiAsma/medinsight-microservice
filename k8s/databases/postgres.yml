@@ -4,9 +4,9 @@ metadata:
   name: postgres-secret
   namespace: medinsight
 type: Opaque
-stringData:
-  POSTGRES_USER: ${POSTGRES_USER}
-  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+data:
+  POSTGRES_USER: YWRtaW4=
+  POSTGRES_PASSWORD: cGFzc3dvcmQ=
 ---
 apiVersion: v1
 kind: ConfigMap

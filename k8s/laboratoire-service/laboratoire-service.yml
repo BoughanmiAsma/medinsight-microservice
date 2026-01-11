@@ -4,9 +4,9 @@ metadata:
   name: laboratoire-secret
   namespace: medinsight
 type: Opaque
-stringData:
-  DB_PASSWORD: ${DB_PASSWORD}
-  KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
+data:
+  DB_PASSWORD: cGFzc3dvcmQ=
+  KEYCLOAK_CLIENT_SECRET: ckJmM3BScld6SnJVaG9ueE9ucmJDUVNUV29RMk00VWE=
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -20,6 +20,8 @@ data:
   KEYCLOAK_AUTH_SERVER_URL: http://keycloak:8180
   KEYCLOAK_REALM: medinsight-realm
   KEYCLOAK_RESOURCE: laboratoire-service
+  FILE_UPLOAD_DIR: /uploads
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -55,6 +57,15 @@ spec:
             secretKeyRef:
               name: laboratoire-secret
               key: KEYCLOAK_CLIENT_SECRET
+        - name: FILE_UPLOAD_DIR
+          valueFrom:
+            configMapKeyRef:
+              name: laboratoire-config
+              key: FILE_UPLOAD_DIR
+        volumeMounts:
+        - name: uploads-volume
+          mountPath: /uploads
+
         resources:
           requests:
             memory: "512Mi"
@@ -74,6 +85,11 @@ spec:
             port: 8081
           initialDelaySeconds: 30
           periodSeconds: 10
+      volumes:
+      - name: uploads-volume
+        persistentVolumeClaim:
+          claimName: lab-uploads-pvc
+
 ---
 apiVersion: v1
 kind: Service
@@ -86,4 +102,6 @@ spec:
   ports:
   - port: 8081
     targetPort: 8081
-  type: ClusterIP
+    nodePort: 30081
+  type: NodePort
+

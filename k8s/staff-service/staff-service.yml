@@ -4,9 +4,9 @@ metadata:
   name: staff-secret
   namespace: medinsight
 type: Opaque
-stringData:
-  DB_PASSWORD: ${DB_PASSWORD}
-  KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
+data:
+  DB_PASSWORD: c2VjcmV0 # secret
+  KEYCLOAK_CLIENT_SECRET: TU5RdldYN012b2t0VFhsdmVLeHZzUFU4dzJJV1JxSGM= # MNQvWX7MvoktTXlveKxvsPU8w2IWRqHc
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -85,4 +85,6 @@ spec:
   ports:
   - port: 9002
     targetPort: 9002
-  type: ClusterIP
+    nodePort: 30002
+  type: NodePort
+

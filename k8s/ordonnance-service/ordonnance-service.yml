@@ -4,9 +4,9 @@ metadata:
   name: ordonnance-secret
   namespace: medinsight
 type: Opaque
-stringData:
-  DB_PASSWORD: ${DB_PASSWORD}
-  KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
+data:
+  DB_PASSWORD: cGFzc3dvcmQ= # password
+  KEYCLOAK_CLIENT_SECRET: Z3VpSkc4aHJDa2ZINXUyRWd2SEhqY0RRUkI2eEpTZHM=
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -86,4 +86,6 @@ spec:
   ports:
   - port: 8082
     targetPort: 8082
-  type: ClusterIP
+    nodePort: 30082
+  type: NodePort
+

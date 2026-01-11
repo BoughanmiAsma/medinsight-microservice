@@ -1,4 +1,4 @@
-name: CI/CD Microservices Pipeline
+name: MedInsight CI/CD Professional Pipeline
 
 on:
   push:
@@ -6,91 +6,156 @@ on:
        - main
        - feature/k8s
 
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+env:
+  DOCKER_IMAGE_PREFIX: boughanmiasma/pds
+  NAMESPACE: medinsight
+  K8S_CONTEXT: github-context
 
+jobs:
+  setup-infrastructure:
+    name: Setup Common Infrastructure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Configure kubeconfig
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG }}
+          # context: ${{ env.K8S_CONTEXT }} # Optional: only if specified in kubeconfig
+
+      - name: Deploy Base Infrastructure
+        env:
+          CLUSTER_DOMAIN: ${{ secrets.CLUSTER_DOMAIN }}
+        run: |
+          echo "Syncing Infrastructure..."
+          kubectl apply -f k8s/namespace.yml
+          kubectl apply -f k8s/databases/ -n ${{ env.NAMESPACE }}
+          kubectl apply -f k8s/kafka/ -n ${{ env.NAMESPACE }}
+          kubectl apply -f k8s/keycloak/ -n ${{ env.NAMESPACE }}
+          kubectl apply -f k8s/kong/ -n ${{ env.NAMESPACE }}
+          
+          # Seul l'Ingress a besoin de CLUSTER_DOMAIN
+          if [ -f "k8s/ingress.yml" ]; then
+            envsubst < k8s/ingress.yml | kubectl apply -f - -n ${{ env.NAMESPACE }}
+          fi
+
+  build-and-deploy:
+    name: Build & Deploy Microservices
+    needs: setup-infrastructure
+    runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        service:
+        service_path:
           - MedInsight-Microservices/dossier-service
           - MedInsight-Microservices/lab-service
           - MedInsight-Microservices/ordonnance-service
-          - Staff-service
+          - MedInsight-Microservices/Staff-service
+          - MedInsight-Microservices/appointment-service
+
+    services:
+      sonarqube:
+        image: sonarqube:community
+        ports:
+          - 9000:9000
+        options: --health-cmd="curl -f http://localhost:9000/api/system/status || exit 1" --health-interval=10s --health-timeout=5s --health-retries=20
 
     steps:
-      # 1. Checkout repository
-      - uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      # 2. Setup Java
-      - name: Set up JDK 20
-        uses: actions/setup-java@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
-          java-version: '20'
+          java-version: '17'
           distribution: 'temurin'
+          cache: 'maven'
 
-      # 3. Build microservice avec Maven
-      - name: Build ${{ matrix.service }}
-        working-directory: ./${{ matrix.service }}
-        run: mvn clean package -DskipTests
+      - name: Build with Maven
+        working-directory: ./${{ matrix.service_path }}
+        run: mvn clean package -DskipTests -B
 
-      # 4. Login Docker Hub
+      - name: SonarQube Analysis
+        working-directory: ./${{ matrix.service_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+          -DskipTests \
+          -Dsonar.projectKey=$(basename ${{ matrix.service_path }}) \
+          -Dsonar.projectName=$(basename ${{ matrix.service_path }}) \
+          -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+          -Dsonar.token=${{ secrets.SONAR_TOKEN }}
+
       - name: Login to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # 5. Build & Push Docker image
-      - name: Build and push Docker image
+      - name: Build & Push Docker Image
         run: |
-          # Extraire le nom court du service (ex: dossier-service)
-          SERVICE_KEY=$(basename ${{ matrix.service }})
-          # Normaliser le nom de l'image
-          IMAGE_NAME=$(echo $SERVICE_KEY | tr '[:upper:]' '[:lower:]')
+          SERVICE_DIR=$(basename ${{ matrix.service_path }})
           
-          docker build -t boughanmiasma/pds:service-$IMAGE_NAME ./${{ matrix.service }}
-          docker push boughanmiasma/pds:service-$IMAGE_NAME
+          # Determine Image name and K8s manifest name
+          if [ "$SERVICE_DIR" == "lab-service" ]; then
+            IMAGE_NAME="laboratoire"
+            K8S_DIR="laboratoire-service"
+          elif [ "$SERVICE_DIR" == "Staff-service" ]; then
+            IMAGE_NAME="staff"
+            K8S_DIR="staff-service"
+          else
+            IMAGE_NAME=$(echo $SERVICE_DIR | sed 's/-service//I' | tr '[:upper:]' '[:lower:]')
+            K8S_DIR=$SERVICE_DIR
+          fi
+          
+          IMAGE_TAG="${{ env.DOCKER_IMAGE_PREFIX }}:service-$IMAGE_NAME"
+          
+          echo "Building image $IMAGE_TAG for service in $K8S_DIR..."
+          docker build -t "$IMAGE_TAG" ./${{ matrix.service_path }}
+          docker push "$IMAGE_TAG"
+          
+          # Store K8S_DIR for next step
+          echo "K8S_DIR=$K8S_DIR" >> $GITHUB_ENV
 
-      # 6. Installer kubectl
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v3
+      - name: Set up Kubectl
+        uses: azure/setup-kubectl@v4
         with:
-          version: v1.29.0
+          version: 'latest'
 
-      # 7. Configurer l'accès au cluster (Utilisation de Secret File pour éviter les erreurs de parse)
       - name: Configure kubeconfig
-        env:
-          KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG }}
-        run: |
-          mkdir -p $HOME/.kube
-          # Utilisation de printf pour gérer les retours à la ligne correctement
-          printf "%s" "$KUBECONFIG_CONTENT" > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG }}
 
-      # 8. Déployer le service correspondant
-      - name: Deploy to Kubernetes
-        env:
-          CLUSTER_DOMAIN: ${{ secrets.CLUSTER_DOMAIN }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-          MYSQL_USER: ${{ secrets.MYSQL_USER }}
-          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
+      - name: Deploy Microservice
         run: |
-          SERVICE_KEY=$(basename ${{ matrix.service }})
-          # Correction du chemin pour correspondre à la structure k8s/<service-name>/<service-name>.yml
-          MANIFEST_PATH="k8s/${SERVICE_KEY}/${SERVICE_KEY}.yml"
-          
-          echo "Deploying $SERVICE_KEY using $MANIFEST_PATH..."
+          # Use K8S_DIR from previous step or re-derive
+          MANIFEST_DIR="${{ env.K8S_DIR }}"
+          MANIFEST_FILE="${MANIFEST_DIR}.yml"
+          MANIFEST_PATH="k8s/${MANIFEST_DIR}/${MANIFEST_FILE}"
           
           if [ -f "$MANIFEST_PATH" ]; then
-            # Injection des variables d'environnement dans le manifest (si nécessaire) et apply
-            # Note: Vous devez avoir CLUSTER_DOMAIN et autres secrets dans votre environnement GitHub.
-            envsubst < "$MANIFEST_PATH" | kubectl apply -f - -n medinsight
+            echo "Deploying from $MANIFEST_PATH..."
+            kubectl apply -f "$MANIFEST_PATH" -n ${{ env.NAMESPACE }}
+            
+            # Application du PVC spécifique au lab s'il existe
+            if [ "$MANIFEST_DIR" == "laboratoire-service" ] && [ -f "k8s/laboratoire-service/pvc.yml" ]; then
+               kubectl apply -f k8s/laboratoire-service/pvc.yml -n ${{ env.NAMESPACE }}
+            fi
+            
           else
-            echo "Error: Manifest $MANIFEST_PATH not found!"
+            echo "Error: Manifest $MANIFEST_PATH not found"
             exit 1
           fi

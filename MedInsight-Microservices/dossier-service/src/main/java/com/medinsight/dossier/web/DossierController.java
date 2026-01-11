@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.*;
 import com.medinsight.dossier.domain.Dossier;
 import com.medinsight.dossier.repository.DossierRepository;
 import com.medinsight.dossier.event.KafkaProducerService;
+import com.medinsight.dossier.repository.AnalysisEntryRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.util.UUID;
@@ -19,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 public class DossierController {
 
     private final DossierRepository repo;
+    private final AnalysisEntryRepository analysisEntryRepository;
     private final KafkaProducerService producerService;
 
     @GetMapping
@@ -72,5 +74,13 @@ public class DossierController {
 
         producerService.sendPrescriptionRequest("prescription.requests", event);
         return ResponseEntity.ok("Prescription Requested");
+    }
+
+    @GetMapping("/{dossierId}/analyses")
+    public ResponseEntity<?> getAnalyses(@PathVariable String dossierId) {
+        if (!UserContext.getCurrent().hasRole("dossier:read")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied: Required role dossier:read");
+        }
+        return ResponseEntity.ok(analysisEntryRepository.findByDossierId(dossierId));
     }
 }

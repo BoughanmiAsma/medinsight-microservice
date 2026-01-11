@@ -43,3 +43,11 @@ spec:
             name: laboratoire-service
             port:
               number: 8081
+      - path: /appointments
+        pathType: Prefix
+        backend:
+          service:
+            name: appointment-service
+            port:
+              number: 8083
+
