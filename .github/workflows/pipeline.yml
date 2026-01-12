@@ -87,20 +87,35 @@ jobs:
       - name: Wait for SonarQube to be ready
         run: |
           echo "Waiting for SonarQube to start..."
-          timeout 120 bash -c 'until curl -sSf http://localhost:9000/api/system/status | grep -q "UP"; do sleep 5; done' || echo "SonarQube timeout"
-          echo "SonarQube is ready!"
-          
-      - name: Configure SonarQube
+          # Attente active avec timeout pour s'assurer que SonarQube est UP
+          for i in {1..30}; do
+            if curl -s -u admin:admin http://localhost:9000/api/system/status | grep -q "UP"; then
+              echo "SonarQube is UP!"
+              break
+            fi
+            echo "SonarQube starting... ($i/30)"
+            sleep 10
+          done
+
+      - name: Configure SonarQube & Generate Token
         run: |
-          echo "Démarrage de la configuration de SonarQube..."
-          # 1. Attendre un peu plus pour être sûr que l'API est prête
-          sleep 10
-          # 2. Changer le mot de passe par défaut (obligatoire sur les nouvelles versions)
-          echo "Changement du mot de passe admin..."
-          curl -v -u admin:admin -X POST "http://localhost:9000/api/users/change_password?login=admin&previousPassword=admin&password=SonarQubeCI123!" || echo "Le mot de passe a peut-être déjà été changé"
-          # 3. Désactiver l'authentification forcée pour simplifier l'accès scanner
-          echo "Désactivation de l'authentification forcée..."
-          curl -v -u admin:SonarQubeCI123! -X POST "http://localhost:9000/api/settings/set?key=sonar.forceAuthentication&value=false" || echo "Erreur lors de la désactivation de forceAuthentication"
+          echo "Setting up SonarQube authentication..."
+          # 1. Changer le mot de passe par défaut (Obligatoire Sonar 10+)
+          # On utilise un mot de passe simple sans caractères spéciaux pour l'API
+          curl -s -u admin:admin -X POST "http://localhost:9000/api/users/change_password?login=admin&previousPassword=admin&password=SonarQubeCI123" || echo "Password already changed"
+          
+          # 2. Générer un Token Global d'Analyse (Plus fiable que login/pass pour le scanner)
+          TOKEN_JSON=$(curl -s -u admin:SonarQubeCI123 -X POST "http://localhost:9000/api/user_tokens/generate?name=CI-Scanner-Token&type=GLOBAL_ANALYSIS")
+          SONAR_TOKEN=$(echo $TOKEN_JSON | grep -o '"token":"[^"]*' | grep -o '[^"]*$')
+          
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "Failed to generate token. API Response: $TOKEN_JSON"
+            exit 1
+          fi
+          
+          # 3. Exporter le token pour les steps suivants
+          echo "SONAR_TOKEN=$SONAR_TOKEN" >> $GITHUB_ENV
+          echo "SonarQube configured successfully with Token."
 
       - name: SonarQube Analysis
         working-directory: ./${{ matrix.service_path }}
@@ -109,11 +124,10 @@ jobs:
         run: |
           mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
           -DskipTests \
-          -Dsonar.projectKey=$(basename ${{ matrix.service_path }}) \
+          -Dsonar.projectKey=$(basename ${{ matrix.service_path }} | tr '[:upper:]' '[:lower:]') \
           -Dsonar.projectName=$(basename ${{ matrix.service_path }}) \
           -Dsonar.host.url=http://localhost:9000 \
-          -Dsonar.login=admin \
-          -Dsonar.password=SonarQubeCI123!
+          -Dsonar.token=${{ env.SONAR_TOKEN }}
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
