@@ -89,6 +89,11 @@ jobs:
           echo "Waiting for SonarQube to start..."
           timeout 120 bash -c 'until curl -sSf http://localhost:9000/api/system/status | grep -q "UP"; do sleep 5; done' || echo "SonarQube timeout"
           echo "SonarQube is ready!"
+          
+      - name: Configure SonarQube
+        run: |
+          echo "Disabling force authentication for CI..."
+          curl -u admin:admin -X POST "http://localhost:9000/api/settings/set?key=sonar.forceAuthentication&value=false" || echo "Already configured"
 
       - name: SonarQube Analysis
         working-directory: ./${{ matrix.service_path }}
