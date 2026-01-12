@@ -92,8 +92,15 @@ jobs:
           
       - name: Configure SonarQube
         run: |
-          echo "Disabling force authentication for CI..."
-          curl -u admin:admin -X POST "http://localhost:9000/api/settings/set?key=sonar.forceAuthentication&value=false" || echo "Already configured"
+          echo "Démarrage de la configuration de SonarQube..."
+          # 1. Attendre un peu plus pour être sûr que l'API est prête
+          sleep 10
+          # 2. Changer le mot de passe par défaut (obligatoire sur les nouvelles versions)
+          echo "Changement du mot de passe admin..."
+          curl -v -u admin:admin -X POST "http://localhost:9000/api/users/change_password?login=admin&previousPassword=admin&password=SonarQubeCI123!" || echo "Le mot de passe a peut-être déjà été changé"
+          # 3. Désactiver l'authentification forcée pour simplifier l'accès scanner
+          echo "Désactivation de l'authentification forcée..."
+          curl -v -u admin:SonarQubeCI123! -X POST "http://localhost:9000/api/settings/set?key=sonar.forceAuthentication&value=false" || echo "Erreur lors de la désactivation de forceAuthentication"
 
       - name: SonarQube Analysis
         working-directory: ./${{ matrix.service_path }}
@@ -106,7 +113,7 @@ jobs:
           -Dsonar.projectName=$(basename ${{ matrix.service_path }}) \
           -Dsonar.host.url=http://localhost:9000 \
           -Dsonar.login=admin \
-          -Dsonar.password=admin
+          -Dsonar.password=SonarQubeCI123!
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
