@@ -101,14 +101,19 @@ jobs:
         run: |
           echo "Setting up SonarQube authentication..."
           # 1. Changer le mot de passe par défaut (Obligatoire Sonar 10+)
-          # Nouveau mot de passe conforme et sûr pour le shell : MedInsight_2024@Secret
-          curl -s -u admin:admin -X POST "http://localhost:9000/api/users/change_password?login=admin&previousPassword=admin&password=MedInsight_2024@Secret" || echo "Password already changed"
+          # Mot de passe alphanumérique sûr : MedInsightSafe2025_
+          NEW_PASS="MedInsightSafe2025_"
+          curl -s -u admin:admin -X POST "http://localhost:9000/api/users/change_password?login=admin&previousPassword=admin&password=$NEW_PASS" || echo "Password already changed or error"
           
-          # 2. Générer un Token Global d'Analyse
-          TOKEN_JSON=$(curl -s -u admin:MedInsight_2024@Secret -X POST "http://localhost:9000/api/user_tokens/generate?name=CI-Scanner-Token&type=GLOBAL_ANALYSIS")
-          SONAR_TOKEN=$(echo $TOKEN_JSON | grep -o '"token":"[^"]*' | grep -o '[^  "]*$')
+          # 2. Générer un Token Global d'Analyse (on utilise jq pour la fiabilité)
+          # On ajoute un timestamp au nom du token pour éviter les conflits
+          TOKEN_NAME="CI-Scanner-$(date +%s)"
+          TOKEN_JSON=$(curl -s -u admin:$NEW_PASS -X POST "http://localhost:9000/api/user_tokens/generate?name=$TOKEN_NAME&type=GLOBAL_ANALYSIS")
           
-          if [ -z "$SONAR_TOKEN" ]; then
+          # Debug : afficher la réponse si le token n'est pas trouvé
+          SONAR_TOKEN=$(echo "$TOKEN_JSON" | jq -r .token // empty)
+          
+          if [ -z "$SONAR_TOKEN" ] || [ "$SONAR_TOKEN" == "null" ]; then
             echo "Failed to generate token. API Response: $TOKEN_JSON"
             exit 1
           fi
