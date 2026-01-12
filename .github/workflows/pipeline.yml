@@ -110,10 +110,10 @@ jobs:
           TOKEN_NAME="CI-Scanner-$(date +%s)"
           TOKEN_JSON=$(curl -s -u admin:$NEW_PASS -X POST "http://localhost:9000/api/user_tokens/generate?name=$TOKEN_NAME&type=GLOBAL_ANALYSIS")
           
-          # Debug : afficher la réponse si le token n'est pas trouvé
-          SONAR_TOKEN=$(echo "$TOKEN_JSON" | jq -r .token // empty)
+          # Extraction du token avec jq (correction de la syntaxe un peu trop complexe)
+          SONAR_TOKEN=$(echo "$TOKEN_JSON" | jq -r '.token')
           
-          if [ -z "$SONAR_TOKEN" ] || [ "$SONAR_TOKEN" == "null" ]; then
+          if [ "$SONAR_TOKEN" == "null" ] || [ -z "$SONAR_TOKEN" ]; then
             echo "Failed to generate token. API Response: $TOKEN_JSON"
             exit 1
           fi
