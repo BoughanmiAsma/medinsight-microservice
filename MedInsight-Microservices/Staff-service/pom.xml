@@ -19,6 +19,11 @@
 
 	<properties>
 		<java.version>17</java.version>
+
+		<!-- SonarQube configuration -->
+		<sonar.projectKey>staff-service</sonar.projectKey>
+		<sonar.projectName>Staff-service</sonar.projectName>
+    <sonar.host.url>http://localhost:9000</sonar.host.url>
 	</properties>
 
 	<dependencies>
