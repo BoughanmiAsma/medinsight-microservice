@@ -108,7 +108,7 @@ jobs:
           # 2. Générer un Token Global d'Analyse (on utilise jq pour la fiabilité)
           # On ajoute un timestamp au nom du token pour éviter les conflits
           TOKEN_NAME="CI-Scanner-$(date +%s)"
-          TOKEN_JSON=$(curl -s -u admin:$NEW_PASS -X POST "http://localhost:9000/api/user_tokens/generate?name=$TOKEN_NAME&type=GLOBAL_ANALYSIS")
+          TOKEN_JSON=$(curl -s -u admin:$NEW_PASS -X POST "http://localhost:9000/api/user_tokens/generate?name=$TOKEN_NAME&type=GLOBAL_ANALYSIS_TOKEN")
           
           # Extraction du token avec jq (correction de la syntaxe un peu trop complexe)
           SONAR_TOKEN=$(echo "$TOKEN_JSON" | jq -r '.token')
