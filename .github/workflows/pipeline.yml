@@ -5,6 +5,7 @@ on:
     branches: 
        - main
        - feature/k8s
+       - feature/appointement-service
 
 env:
   DOCKER_IMAGE_PREFIX: boughanmiasma/pds
@@ -42,10 +43,10 @@ jobs:
           kubectl apply -f k8s/keycloak/ -n ${{ env.NAMESPACE }}
           kubectl apply -f k8s/kong/ -n ${{ env.NAMESPACE }}
           
-          # Seul l'Ingress a besoin de CLUSTER_DOMAIN
-          if [ -f "k8s/ingress.yml" ]; then
-            envsubst < k8s/ingress.yml | kubectl apply -f - -n ${{ env.NAMESPACE }}
-          fi
+          # Ingress désactivé - Les services utilisent NodePort
+          # if [ -f "k8s/ingress.yml" ]; then
+          #   envsubst < k8s/ingress.yml | kubectl apply -f - -n ${{ env.NAMESPACE }}
+          # fi
 
   build-and-deploy:
     name: Build & Deploy Microservices
