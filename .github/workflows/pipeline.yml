@@ -101,12 +101,12 @@ jobs:
         run: |
           echo "Setting up SonarQube authentication..."
           # 1. Changer le mot de passe par défaut (Obligatoire Sonar 10+)
-          # On utilise un mot de passe simple sans caractères spéciaux pour l'API
-          curl -s -u admin:admin -X POST "http://localhost:9000/api/users/change_password?login=admin&previousPassword=admin&password=SonarQubeCI123" || echo "Password already changed"
+          # Nouveau mot de passe conforme et sûr pour le shell : MedInsight_2024@Secret
+          curl -s -u admin:admin -X POST "http://localhost:9000/api/users/change_password?login=admin&previousPassword=admin&password=MedInsight_2024@Secret" || echo "Password already changed"
           
-          # 2. Générer un Token Global d'Analyse (Plus fiable que login/pass pour le scanner)
-          TOKEN_JSON=$(curl -s -u admin:SonarQubeCI123 -X POST "http://localhost:9000/api/user_tokens/generate?name=CI-Scanner-Token&type=GLOBAL_ANALYSIS")
-          SONAR_TOKEN=$(echo $TOKEN_JSON | grep -o '"token":"[^"]*' | grep -o '[^"]*$')
+          # 2. Générer un Token Global d'Analyse
+          TOKEN_JSON=$(curl -s -u admin:MedInsight_2024@Secret -X POST "http://localhost:9000/api/user_tokens/generate?name=CI-Scanner-Token&type=GLOBAL_ANALYSIS")
+          SONAR_TOKEN=$(echo $TOKEN_JSON | grep -o '"token":"[^"]*' | grep -o '[^  "]*$')
           
           if [ -z "$SONAR_TOKEN" ]; then
             echo "Failed to generate token. API Response: $TOKEN_JSON"
@@ -115,7 +115,7 @@ jobs:
           
           # 3. Exporter le token pour les steps suivants
           echo "SONAR_TOKEN=$SONAR_TOKEN" >> $GITHUB_ENV
-          echo "SonarQube configured successfully with Token."
+          echo "SonarQube configured successfully."
 
       - name: SonarQube Analysis
         working-directory: ./${{ matrix.service_path }}
@@ -127,7 +127,7 @@ jobs:
           -Dsonar.projectKey=$(basename ${{ matrix.service_path }} | tr '[:upper:]' '[:lower:]') \
           -Dsonar.projectName=$(basename ${{ matrix.service_path }}) \
           -Dsonar.host.url=http://localhost:9000 \
-          -Dsonar.token=${{ env.SONAR_TOKEN }}
+          -Dsonar.token="${{ env.SONAR_TOKEN }}"
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
