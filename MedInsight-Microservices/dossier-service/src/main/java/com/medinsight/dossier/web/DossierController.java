@@ -1,11 +1,15 @@
 package com.medinsight.dossier.web;
 
 import org.springframework.web.bind.annotation.*;
+import com.medinsight.dossier.domain.Consultation;
 import com.medinsight.dossier.domain.Dossier;
 import com.medinsight.dossier.repository.DossierRepository;
+import com.medinsight.dossier.repository.ConsultationRepository;
 import com.medinsight.dossier.event.KafkaProducerService;
 import com.medinsight.dossier.repository.AnalysisEntryRepository;
 import lombok.RequiredArgsConstructor;
+
+import java.time.LocalDateTime;
 
 import java.util.UUID;
 import java.util.Map;
@@ -20,6 +24,7 @@ import org.springframework.http.ResponseEntity;
 public class DossierController {
 
     private final DossierRepository repo;
+    private final ConsultationRepository consultationRepository;
     private final AnalysisEntryRepository analysisEntryRepository;
     private final KafkaProducerService producerService;
 
@@ -82,5 +87,28 @@ public class DossierController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied: Required role dossier:read");
         }
         return ResponseEntity.ok(analysisEntryRepository.findByDossierId(dossierId));
+    }
+
+    // --- New Consultation Methods ---
+
+    @PostMapping("/{dossierId}/consultations")
+    public ResponseEntity<?> createConsultation(@PathVariable String dossierId, @RequestBody Consultation consultation) {
+        if (!UserContext.getCurrent().hasRole("dossier:write")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied: Required role dossier:write");
+        }
+        consultation.setId(UUID.randomUUID().toString());
+        consultation.setDossierId(dossierId);
+        if (consultation.getConsultationDate() == null) {
+            consultation.setConsultationDate(LocalDateTime.now());
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(consultationRepository.save(consultation));
+    }
+
+    @GetMapping("/{dossierId}/consultations")
+    public ResponseEntity<?> getConsultationsByDossier(@PathVariable String dossierId) {
+        if (!UserContext.getCurrent().hasRole("dossier:read")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied: Required role dossier:read");
+        }
+        return ResponseEntity.ok(consultationRepository.findByDossierId(dossierId));
     }
 }

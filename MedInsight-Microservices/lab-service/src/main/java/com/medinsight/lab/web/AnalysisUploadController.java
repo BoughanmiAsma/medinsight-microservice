@@ -12,7 +12,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
+
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -30,6 +32,9 @@ public class AnalysisUploadController {
     private final AnalysisReportRepository analysisReportRepository;
     private final KafkaProducerService kafkaProducerService;
 
+    @Value("${file.download-base-url:http://localhost:8200/api/lab/files/}")
+    private String downloadBaseUrl;
+
     @PostMapping("/upload")
     public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file,
             @RequestParam("dossierId") String dossierId) {
@@ -40,10 +45,7 @@ public class AnalysisUploadController {
 
         String fileName = fileStorageService.storeFile(file);
 
-        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/api/lab/files/")
-                .path(fileName)
-                .toUriString();
+        String fileDownloadUri = downloadBaseUrl + fileName;
 
         AnalysisReport report = new AnalysisReport();
         report.setDossierId(dossierId);
