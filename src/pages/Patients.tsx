@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  MoreVertical, 
+import {
+  Plus,
+  Search,
+  Filter,
+  MoreVertical,
   Eye,
   Pencil,
   Trash2,
@@ -27,72 +27,77 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { Patient } from '@/types';
 import { format, parseISO, differenceInYears } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
-// Mock data
-const mockPatients: Patient[] = [
-  {
-    id: '1',
-    nom: 'Dupont',
-    prenom: 'Marie',
-    dateNaissance: '1985-03-15',
-    sexe: 'F',
-    telephone: '06 12 34 56 78',
-    email: 'marie.dupont@email.com',
-    adresse: '12 Rue de la Paix, 75001 Paris',
-    groupeSanguin: 'A+',
-    allergies: ['Pénicilline'],
-    createdAt: '2024-01-15T10:00:00Z',
-    updatedAt: '2024-01-20T14:30:00Z',
-  },
-  {
-    id: '2',
-    nom: 'Bernard',
-    prenom: 'Pierre',
-    dateNaissance: '1972-08-22',
-    sexe: 'M',
-    telephone: '06 98 76 54 32',
-    email: 'pierre.bernard@email.com',
-    groupeSanguin: 'O-',
-    antecedents: ['Diabète type 2', 'Hypertension'],
-    createdAt: '2023-11-08T09:15:00Z',
-    updatedAt: '2024-01-18T11:00:00Z',
-  },
-  {
-    id: '3',
-    nom: 'Leroy',
-    prenom: 'Sophie',
-    dateNaissance: '1990-11-08',
-    sexe: 'F',
-    telephone: '06 45 67 89 01',
-    groupeSanguin: 'B+',
-    createdAt: '2024-01-10T16:45:00Z',
-    updatedAt: '2024-01-10T16:45:00Z',
-  },
-  {
-    id: '4',
-    nom: 'Moreau',
-    prenom: 'Jean',
-    dateNaissance: '1965-05-30',
-    sexe: 'M',
-    telephone: '06 78 90 12 34',
-    email: 'jean.moreau@email.com',
-    adresse: '45 Avenue des Champs-Élysées, 75008 Paris',
-    groupeSanguin: 'AB+',
-    antecedents: ['Chirurgie cardiaque 2019'],
-    allergies: ['Aspirine', 'Iode'],
-    createdAt: '2022-06-20T08:30:00Z',
-    updatedAt: '2024-01-19T10:15:00Z',
-  },
-];
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import api from '@/api/axios';
+import { useAuth } from '@/contexts/AuthContext';
+import { Loader2 } from 'lucide-react';
 
 const Patients = () => {
+  const { hasRole } = useAuth();
+  const isAuthorized = hasRole('MEDECIN') || hasRole('SECRETAIRE') || hasRole('ADMIN');
   const [searchQuery, setSearchQuery] = useState('');
-  const [patients] = useState<Patient[]>(mockPatients);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newPatient, setNewPatient] = useState<Partial<Patient>>({
+    sexe: 'M',
+    groupeSanguin: 'O+',
+    dateNaissance: new Date().toISOString().split('T')[0]
+  });
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const addMutation = useMutation({
+    mutationFn: (data: Partial<Patient>) => api.post('/dossiers', {
+      nom: data.nom,
+      prenom: data.prenom,
+      email: data.email,
+      telephone: data.telephone,
+      sexe: data.sexe,
+      dateNaissance: data.dateNaissance,
+      groupeSanguin: data.groupeSanguin
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      setIsAddModalOpen(false);
+      setNewPatient({ sexe: 'M', groupeSanguin: 'O+', dateNaissance: new Date().toISOString().split('T')[0] });
+      toast.success('Patient ajouté avec succès');
+    },
+    onError: () => toast.error("Erreur lors de l'ajout du patient")
+  });
+
+  const handleAddPatient = (e: React.FormEvent) => {
+    e.preventDefault();
+    addMutation.mutate(newPatient);
+  };
+
+  const { data: patients = [], isLoading, error } = useQuery({
+    queryKey: ['patients'],
+    queryFn: async () => {
+      const response = await api.get<Patient[]>('/dossiers');
+      return response.data;
+    },
+    enabled: isAuthorized
+  });
 
   const filteredPatients = patients.filter(patient =>
     `${patient.prenom} ${patient.nom}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -101,8 +106,28 @@ const Patients = () => {
   );
 
   const calculateAge = (dateNaissance: string) => {
-    return differenceInYears(new Date(), parseISO(dateNaissance));
+    try {
+      return differenceInYears(new Date(), parseISO(dateNaissance));
+    } catch (e) {
+      return 0;
+    }
   };
+
+  if (!isAuthorized) {
+    return <div className="p-8 text-center text-destructive font-medium">Accès refusé. Rôle insuffisant.</div>;
+  }
+
+  if (isLoading) return (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    </div>
+  );
+
+  if (error) return (
+    <div className="p-8 text-center text-destructive">
+      Erreur lors du chargement des dossiers patients.
+    </div>
+  );
 
   return (
     <div className="page-transition space-y-6">
@@ -114,10 +139,87 @@ const Patients = () => {
             {filteredPatients.length} patients dans la base de données
           </p>
         </div>
-        <Button className="gap-2 shrink-0">
-          <Plus className="w-4 h-4" />
-          Nouveau Patient
-        </Button>
+
+        <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2 shrink-0">
+              <Plus className="w-4 h-4" />
+              Nouveau Patient
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <form onSubmit={handleAddPatient}>
+              <DialogHeader>
+                <DialogTitle>Nouveau Patient</DialogTitle>
+                <DialogDescription>
+                  Créez un nouveau dossier médical pour un patient.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="nom" className="text-right">Nom</Label>
+                  <Input id="nom" className="col-span-3" required
+                    value={newPatient.nom || ''}
+                    onChange={e => setNewPatient({ ...newPatient, nom: e.target.value })} />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="prenom" className="text-right">Prénom</Label>
+                  <Input id="prenom" className="col-span-3" required
+                    value={newPatient.prenom || ''}
+                    onChange={e => setNewPatient({ ...newPatient, prenom: e.target.value })} />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="dateNaissance" className="text-right">Email</Label>
+                  <Input id="email" type="email" className="col-span-3"
+                    value={newPatient.email || ''}
+                    onChange={e => setNewPatient({ ...newPatient, email: e.target.value })} />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="telephone" className="text-right">Téléphone</Label>
+                  <Input id="telephone" className="col-span-3"
+                    value={newPatient.telephone || ''}
+                    onChange={e => setNewPatient({ ...newPatient, telephone: e.target.value })} />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="sexe" className="text-right">Sexe</Label>
+                  <Select value={newPatient.sexe} onValueChange={(v: 'M' | 'F') => setNewPatient({ ...newPatient, sexe: v })}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="M">Masculin</SelectItem>
+                      <SelectItem value="F">Féminin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="groupe" className="text-right">Groupe</Label>
+                  <Select value={newPatient.groupeSanguin} onValueChange={(v) => setNewPatient({ ...newPatient, groupeSanguin: v })}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="A+">A+</SelectItem>
+                      <SelectItem value="A-">A-</SelectItem>
+                      <SelectItem value="B+">B+</SelectItem>
+                      <SelectItem value="B-">B-</SelectItem>
+                      <SelectItem value="AB+">AB+</SelectItem>
+                      <SelectItem value="AB-">AB-</SelectItem>
+                      <SelectItem value="O+">O+</SelectItem>
+                      <SelectItem value="O-">O-</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="submit" disabled={addMutation.isPending}>
+                  {addMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Enregistrer
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Filters */}
@@ -152,8 +254,8 @@ const Patients = () => {
           </TableHeader>
           <TableBody>
             {filteredPatients.map((patient) => (
-              <TableRow 
-                key={patient.id} 
+              <TableRow
+                key={patient.id}
                 className="data-table-row cursor-pointer"
                 onClick={() => navigate(`/patients/${patient.id}`)}
               >

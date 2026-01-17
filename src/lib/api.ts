@@ -18,11 +18,11 @@ api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // Get token from localStorage or auth state
     const token = localStorage.getItem('auth_token');
-    
+
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     return config;
   },
   (error: AxiosError) => {
@@ -35,7 +35,7 @@ api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const status = error.response?.status;
-    
+
     if (status === 401) {
       // Token expired or invalid
       // In production: Try to refresh token or redirect to login
@@ -44,7 +44,7 @@ api.interceptors.response.use(
         description: 'Veuillez vous reconnecter.',
         variant: 'destructive',
       });
-      
+
       // Clear auth state and redirect
       localStorage.removeItem('auth_token');
       window.location.href = '/login';
@@ -67,7 +67,7 @@ api.interceptors.response.use(
         variant: 'destructive',
       });
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -82,49 +82,49 @@ export const endpoints = {
     update: (id: string, data: any) => api.put(`/staffs/${id}`, data),
     delete: (id: string) => api.delete(`/staffs/${id}`),
   },
-  
+
   // Dossiers (Patient Records)
   dossiers: {
-    list: (params?: any) => api.get('/api/dossiers', { params }),
-    get: (id: string) => api.get(`/api/dossiers/${id}`),
-    create: (data: any) => api.post('/api/dossiers', data),
-    update: (id: string, data: any) => api.put(`/api/dossiers/${id}`, data),
-    search: (query: string) => api.get(`/api/dossiers/search`, { params: { q: query } }),
+    list: (params?: any) => api.get('/dossiers', { params }),
+    get: (id: string) => api.get(`/dossiers/${id}`),
+    create: (data: any) => api.post('/dossiers', data),
+    update: (id: string, data: any) => api.put(`/dossiers/${id}`, data),
+    search: (query: string) => api.get(`/dossiers/search`, { params: { q: query } }),
   },
-  
+
   // Appointments
   appointments: {
-    list: (params?: any) => api.get('/api/appointments', { params }),
-    get: (id: string) => api.get(`/api/appointments/${id}`),
-    create: (data: any) => api.post('/api/appointments', data),
-    update: (id: string, data: any) => api.put(`/api/appointments/${id}`, data),
-    cancel: (id: string) => api.patch(`/api/appointments/${id}/cancel`),
-    today: () => api.get('/api/appointments/today'),
+    list: (params?: any) => api.get('/appointments', { params }),
+    get: (id: string) => api.get(`/appointments/${id}`),
+    create: (data: any) => api.post('/appointments', data),
+    update: (id: string, data: any) => api.put(`/appointments/${id}`, data),
+    cancel: (id: string) => api.patch(`/appointments/${id}/cancel`),
+    today: () => api.get('/appointments/today'),
   },
-  
+
   // Lab Orders
   lab: {
-    list: (params?: any) => api.get('/api/lab-orders', { params }),
-    get: (id: string) => api.get(`/api/lab-orders/${id}`),
-    create: (data: any) => api.post('/api/lab-orders', data),
-    updateResults: (id: string, data: any) => api.patch(`/api/lab-orders/${id}/results`, data),
-    pending: () => api.get('/api/lab-orders/pending'),
+    list: (params?: any) => api.get('/lab-orders', { params }),
+    get: (id: string) => api.get(`/lab-orders/${id}`),
+    create: (data: any) => api.post('/lab-orders', data),
+    updateResults: (id: string, data: any) => api.patch(`/lab-orders/${id}/results`, data),
+    pending: () => api.get('/lab-orders/pending'),
   },
-  
+
   // Prescriptions
   prescriptions: {
-    list: (params?: any) => api.get('/api/prescriptions', { params }),
-    get: (id: string) => api.get(`/api/prescriptions/${id}`),
-    create: (data: any) => api.post('/api/prescriptions', data),
-    byPatient: (patientId: string) => api.get(`/api/prescriptions/patient/${patientId}`),
+    list: (params?: any) => api.get('/prescriptions', { params }),
+    get: (id: string) => api.get(`/prescriptions/${id}`),
+    create: (data: any) => api.post('/prescriptions', data),
+    byPatient: (patientId: string) => api.get(`/prescriptions/patient/${patientId}`),
   },
-  
+
   // Consultations
   consultations: {
-    list: (params?: any) => api.get('/api/consultations', { params }),
-    get: (id: string) => api.get(`/api/consultations/${id}`),
-    create: (data: any) => api.post('/api/consultations', data),
-    update: (id: string, data: any) => api.put(`/api/consultations/${id}`, data),
+    list: (params?: any) => api.get('/consultations', { params }),
+    get: (id: string) => api.get(`/consultations/${id}`),
+    create: (data: any) => api.post('/consultations', data),
+    update: (id: string, data: any) => api.put(`/consultations/${id}`, data),
   },
 };
 

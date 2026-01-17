@@ -8,7 +8,7 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
-  const { isLoading, isAuthenticated } = useAuth();
+  const { isLoading, isAuthenticated, login } = useAuth();
 
   if (isLoading) {
     return (
@@ -36,7 +36,10 @@ export function AppLayout({ children }: AppLayoutProps) {
           <p className="text-muted-foreground mb-6">
             Veuillez vous connecter pour accéder à MedInsight.
           </p>
-          <button className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors">
+          <button
+            onClick={login}
+            className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
+          >
             Se connecter avec Keycloak
           </button>
         </div>

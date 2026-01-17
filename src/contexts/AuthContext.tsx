@@ -1,5 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+
+import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import { User, UserRole, AuthState } from '@/types';
+import { useAuth as useOidcAuth } from "react-oidc-context";
+import { User as OidcUser } from "oidc-client-ts";
 
 interface AuthContextType extends AuthState {
   login: () => void;
@@ -10,84 +13,72 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock user for development - Replace with actual Keycloak integration
-const mockUser: User = {
-  id: '1',
-  email: 'dr.martin@medinsight.com',
-  nom: 'Martin',
-  prenom: 'Jean',
-  roles: ['MEDECIN', 'ADMIN'],
-  specialite: 'Médecine Générale',
+// Helper to map OIDC User Profile to App User
+const mapOidcUserToAppUser = (profile: any): User => {
+  const roles: UserRole[] = (profile.realm_access?.roles || [])
+    .filter((role: string) => role.startsWith('ROLE_'))
+    .map((role: string) => role.replace('ROLE_', '') as UserRole);
+
+  return {
+    id: profile.sub,
+    email: profile.email,
+    nom: profile.family_name || 'Unknown',
+    prenom: profile.given_name || 'User',
+    roles: roles,
+    specialite: '', // Not available in standard token, maybe custom claim?
+  };
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    isAuthenticated: false,
-    isLoading: true,
-    token: null,
-  });
+  const auth = useOidcAuth();
 
-  useEffect(() => {
-    // Simulate auth check - Replace with Keycloak init
-    const initAuth = async () => {
-      try {
-        // In production, initialize Keycloak here:
-        // const keycloak = new Keycloak({
-        //   url: 'http://localhost:8080',
-        //   realm: 'microservices-realm',
-        //   clientId: 'medinsight-client',
-        // });
-        // await keycloak.init({ onLoad: 'login-required' });
-        
-        // For development, auto-login with mock user
-        setTimeout(() => {
-          setAuthState({
-            user: mockUser,
-            isAuthenticated: true,
-            isLoading: false,
-            token: 'mock-jwt-token',
-          });
-        }, 500);
-      } catch (error) {
-        console.error('Auth initialization failed:', error);
-        setAuthState(prev => ({ ...prev, isLoading: false }));
-      }
-    };
-
-    initAuth();
-  }, []);
+  const user = useMemo(() => {
+    if (auth.user?.profile) {
+      return mapOidcUserToAppUser(auth.user.profile);
+    }
+    return null;
+  }, [auth.user]);
 
   const login = () => {
-    // In production: keycloak.login()
-    setAuthState({
-      user: mockUser,
-      isAuthenticated: true,
-      isLoading: false,
-      token: 'mock-jwt-token',
-    });
+    auth.signinRedirect();
   };
 
   const logout = () => {
-    // In production: keycloak.logout()
-    setAuthState({
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-      token: null,
-    });
+    auth.signoutRedirect();
   };
 
   const hasRole = (role: UserRole): boolean => {
-    return authState.user?.roles.includes(role) ?? false;
+    return user?.roles.includes(role) ?? false;
   };
 
   const hasAnyRole = (roles: UserRole[]): boolean => {
     return roles.some(role => hasRole(role));
   };
 
+  const value = {
+    user,
+    isAuthenticated: auth.isAuthenticated ?? false,
+    isLoading: auth.isLoading,
+    token: auth.user?.access_token ?? null,
+    login,
+    logout,
+    hasRole,
+    hasAnyRole
+  };
+
+  if (auth.isLoading) {
+    return <div>Loading authentication...</div>;
+  }
+
+  // Auto-login check (optional, or rely on Protected Routes)
+  // If we want to force login everywhere:
+  // if (!auth.isAuthenticated) {
+  //    auth.signinRedirect();
+  //    return <div>Redirecting to login...</div>;
+  // }
+
   return (
-    <AuthContext.Provider value={{ ...authState, login, logout, hasRole, hasAnyRole }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

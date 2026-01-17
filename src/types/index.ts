@@ -1,5 +1,4 @@
-// User & Authentication Types
-export type UserRole = 'ADMIN' | 'MEDECIN' | 'INFIRMIER' | 'SECRETAIRE' | 'TECHNICIEN';
+export type UserRole = 'ADMIN' | 'MEDECIN' | 'INFIRMIER' | 'SECRETAIRE' | 'TECHNICIEN' | 'AIDE_SOIGNANT' | 'PHARMACIEN' | 'LABORATOIRE' | 'PHARMACIE';
 
 export interface User {
   id: string;
@@ -19,15 +18,16 @@ export interface AuthState {
 
 // Staff Types
 export interface Staff {
-  id: string;
+  id: number;
   nom: string;
   prenom: string;
-  type: UserRole;
-  specialite?: string;
   email: string;
   telephone?: string;
+  type: UserRole;
+  specialite?: string;
+  numeroLicence?: string;
+  actif: boolean;
   dateEmbauche?: string;
-  statut: 'ACTIF' | 'INACTIF';
 }
 
 // Patient/Dossier Types
@@ -60,27 +60,22 @@ export interface Dossier {
 export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
 
 export interface Appointment {
-  id: string;
-  patientId: string;
-  patientNom: string;
-  patientPrenom: string;
+  id: number;
+  dossierId: string;
   medecinId: string;
-  medecinNom: string;
   dateHeure: string;
-  duree: number; // in minutes
-  motif: string;
-  statut: AppointmentStatus;
-  notes?: string;
+  status: string;
+  motif?: string;
 }
 
 // Consultation Types
 export interface Consultation {
-visiteType: string;
+  visiteType: string;
   id: string;
   dossierId: string;
   medecinId: string;
   medecinNom: string;
-  dateConsultation: string;
+  consultationDate: string;
   motif: string;
   symptomes?: string;
   diagnostic?: string;
@@ -99,16 +94,11 @@ export interface Medication {
 }
 
 export interface Prescription {
-  id: string;
+  id: number;
+  dossierId: string;
   consultationId: string;
-  medecinId: string;
-  medecinNom: string;
-  patientId: string;
-  patientNom: string;
-  datePrescription: string;
-  medications: Medication[];
-  notes?: string;
-  statut: 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
+  medicationDetails: string;
+  status: string;
 }
 
 // Lab Types
@@ -124,20 +114,12 @@ export interface LabTest {
 }
 
 export interface LabOrder {
-  id: string;
-  consultationId?: string;
-  patientId: string;
-  patientNom: string;
-  medecinId: string;
-  medecinNom: string;
-  technicienId?: string;
-  technicienNom?: string;
-  dateCommande: string;
-  dateResultat?: string;
-  tests: LabTest[];
-  statut: LabOrderStatus;
-  priorite: 'NORMAL' | 'URGENT';
-  notes?: string;
+  id: number;
+  dossierId: string;
+  consultationId: string;
+  testCode: string;
+  status: string;
+  result?: string;
 }
 
 // Dashboard Stats

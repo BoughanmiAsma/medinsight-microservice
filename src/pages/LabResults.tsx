@@ -1,109 +1,123 @@
 import { useState } from 'react';
-import { 
-  Search, 
-  Filter, 
+import {
+  Search,
+  Filter,
   FlaskConical,
   Clock,
   CheckCircle2,
   AlertCircle,
   User,
-  FileDown
+  Upload,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { LabOrder, LabOrderStatus } from '@/types';
-import { format, parseISO } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { LabOrder } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import api from '@/api/axios';
+import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
-// Mock data
-const mockLabOrders: LabOrder[] = [
-  {
-    id: '1',
-    patientId: '1',
-    patientNom: 'Marie Dupont',
-    medecinId: '1',
-    medecinNom: 'Dr. Martin',
-    dateCommande: new Date().toISOString(),
-    tests: [
-      { code: 'NFS', nom: 'Numération Formule Sanguine' },
-      { code: 'GLY', nom: 'Glycémie à jeun' },
-    ],
-    statut: 'PENDING',
-    priorite: 'NORMAL',
-  },
-  {
-    id: '2',
-    patientId: '2',
-    patientNom: 'Pierre Bernard',
-    medecinId: '1',
-    medecinNom: 'Dr. Martin',
-    dateCommande: new Date(Date.now() - 86400000).toISOString(),
-    tests: [
-      { code: 'HBA1C', nom: 'Hémoglobine glyquée', resultat: '6.8', unite: '%', valeurReference: '< 7%', interpretation: 'NORMAL' },
-      { code: 'CREAT', nom: 'Créatinine', resultat: '95', unite: 'µmol/L', valeurReference: '60-110', interpretation: 'NORMAL' },
-    ],
-    statut: 'COMPLETED',
-    priorite: 'NORMAL',
-    dateResultat: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    patientId: '3',
-    patientNom: 'Sophie Leroy',
-    medecinId: '1',
-    medecinNom: 'Dr. Martin',
-    dateCommande: new Date(Date.now() - 3600000).toISOString(),
-    tests: [
-      { code: 'TSH', nom: 'TSH ultra-sensible' },
-      { code: 'T4', nom: 'T4 libre' },
-    ],
-    statut: 'IN_PROGRESS',
-    priorite: 'URGENT',
-    technicienId: '4',
-    technicienNom: 'Anne Moreau',
-  },
-];
-
-const statusConfig: Record<LabOrderStatus, { label: string; icon: React.ComponentType<any>; class: string }> = {
-  PENDING: { 
-    label: 'En attente', 
+const statusConfig: Record<string, { label: string; icon: React.ComponentType<any>; class: string }> = {
+  PENDING: {
+    label: 'En attente',
     icon: Clock,
     class: 'bg-warning/10 text-warning border-warning/20'
   },
-  IN_PROGRESS: { 
-    label: 'En cours', 
+  IN_PROGRESS: {
+    label: 'En cours',
     icon: FlaskConical,
     class: 'bg-info/10 text-info border-info/20'
   },
-  COMPLETED: { 
-    label: 'Terminé', 
+  COMPLETED: {
+    label: 'Terminé',
     icon: CheckCircle2,
     class: 'bg-success/10 text-success border-success/20'
   },
-  CANCELLED: { 
-    label: 'Annulé', 
+  CANCELLED: {
+    label: 'Annulé',
     icon: AlertCircle,
     class: 'bg-destructive/10 text-destructive border-destructive/20'
   },
 };
 
 const LabResults = () => {
+  const { hasRole } = useAuth();
+  const isTechnician = hasRole('TECHNICIEN') || hasRole('ADMIN');
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
-  const [labOrders] = useState<LabOrder[]>(mockLabOrders);
   const [activeTab, setActiveTab] = useState('all');
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<LabOrder | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+
+  const { data: labOrders = [], isLoading, error } = useQuery({
+    queryKey: ['labOrders'],
+    queryFn: async () => {
+      const response = await api.get<LabOrder[]>('/lab-orders');
+      return response.data;
+    },
+  });
+
+  const uploadMutation = useMutation({
+    mutationFn: async ({ dossierId, file }: { dossierId: string; file: File }) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('dossierId', dossierId);
+      return api.post('/lab/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['labOrders'] });
+      setIsUploadModalOpen(false);
+      setFile(null);
+      setSelectedOrder(null);
+      toast.success('Rapport uploadé avec succès');
+    },
+    onError: () => toast.error("Erreur lors de l'upload")
+  });
+
+  const handleUpload = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedOrder && file) {
+      uploadMutation.mutate({ dossierId: selectedOrder.dossierId, file });
+    }
+  };
 
   const filteredOrders = labOrders.filter(order => {
-    const matchesSearch = order.patientNom.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.tests.some(t => t.nom.toLowerCase().includes(searchQuery.toLowerCase()));
-    
+    const matchesSearch = order.dossierId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.testCode.toLowerCase().includes(searchQuery.toLowerCase());
+
     if (activeTab === 'all') return matchesSearch;
-    if (activeTab === 'pending') return matchesSearch && (order.statut === 'PENDING' || order.statut === 'IN_PROGRESS');
-    if (activeTab === 'completed') return matchesSearch && order.statut === 'COMPLETED';
+    if (activeTab === 'pending') return matchesSearch && (order.status === 'PENDING' || order.status === 'IN_PROGRESS');
+    if (activeTab === 'completed') return matchesSearch && order.status === 'COMPLETED';
     return matchesSearch;
   });
+
+  if (isLoading) return (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    </div>
+  );
+
+  if (error) return (
+    <div className="p-8 text-center text-destructive">
+      Erreur lors du chargement des commandes labo.
+    </div>
+  );
 
   return (
     <div className="page-transition space-y-6">
@@ -125,12 +139,12 @@ const LabResults = () => {
             <TabsTrigger value="pending">En attente</TabsTrigger>
             <TabsTrigger value="completed">Terminées</TabsTrigger>
           </TabsList>
-          
+
           <div className="flex flex-1 gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Rechercher par patient ou analyse..."
+                placeholder="Rechercher par dossier ou analyse..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -144,12 +158,12 @@ const LabResults = () => {
         </div>
 
         <TabsContent value={activeTab} className="mt-0 space-y-4">
-          {filteredOrders.map((order) => {
-            const statusInfo = statusConfig[order.statut];
+          {filteredOrders.length > 0 ? filteredOrders.map((order) => {
+            const statusInfo = statusConfig[order.status] || statusConfig.PENDING;
             const StatusIcon = statusInfo.icon;
 
             return (
-              <div 
+              <div
                 key={order.id}
                 className="glass-card overflow-hidden hover:shadow-lg transition-all duration-200"
               >
@@ -160,18 +174,13 @@ const LabResults = () => {
                       <User className="w-5 h-5 text-accent" />
                     </div>
                     <div>
-                      <p className="font-medium">{order.patientNom}</p>
+                      <p className="font-medium">Dossier: {order.dossierId}</p>
                       <p className="text-sm text-muted-foreground">
-                        {format(parseISO(order.dateCommande), "d MMM yyyy 'à' HH:mm", { locale: fr })}
+                        Cmd #{order.id}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    {order.priorite === 'URGENT' && (
-                      <Badge variant="destructive" className="uppercase text-xs">
-                        Urgent
-                      </Badge>
-                    )}
                     <Badge variant="outline" className={cn(statusInfo.class)}>
                       <StatusIcon className="w-3.5 h-3.5 mr-1.5" />
                       {statusInfo.label}
@@ -180,66 +189,67 @@ const LabResults = () => {
                 </div>
 
                 {/* Tests */}
-                <div className="p-4 space-y-3">
-                  {order.tests.map((test, index) => (
-                    <div 
-                      key={index}
-                      className={cn(
-                        "flex items-center justify-between p-3 rounded-lg",
-                        test.resultat ? "bg-muted/30" : "bg-muted/50"
-                      )}
-                    >
-                      <div>
-                        <p className="font-medium text-sm">{test.nom}</p>
-                        <p className="text-xs text-muted-foreground">{test.code}</p>
-                      </div>
-                      {test.resultat ? (
-                        <div className="text-right">
-                          <p className={cn(
-                            "font-semibold",
-                            test.interpretation === 'NORMAL' 
-                              ? "text-success" 
-                              : "text-destructive"
-                          )}>
-                            {test.resultat} {test.unite}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Réf: {test.valeurReference}
-                          </p>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">
-                          En attente
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Footer */}
-                {order.statut === 'COMPLETED' && (
-                  <div className="flex items-center justify-between p-4 border-t border-border bg-muted/20">
-                    <p className="text-sm text-muted-foreground">
-                      Résultats disponibles le {format(parseISO(order.dateResultat!), "d MMM yyyy", { locale: fr })}
-                    </p>
-                    <Button variant="outline" size="sm" className="gap-2">
-                      <FileDown className="w-4 h-4" />
-                      Télécharger PDF
-                    </Button>
+                <div className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold text-primary">{order.testCode}</p>
+                    <p className="text-xs text-muted-foreground">Consultation: {order.consultationId}</p>
                   </div>
-                )}
+
+                  {isTechnician && order.status !== 'COMPLETED' && (
+                    <Button
+                      className="gap-2"
+                      onClick={() => {
+                        setSelectedOrder(order);
+                        setIsUploadModalOpen(true);
+                      }}
+                    >
+                      <Upload className="w-4 h-4" />
+                      Compléter
+                    </Button>
+                  )}
+
+                  {order.status === 'COMPLETED' && (
+                    <Badge variant="secondary" className="bg-success/10 text-success">
+                      Rapport envoyé
+                    </Badge>
+                  )}
+                </div>
               </div>
             );
-          })}
+          }) : (
+            <div className="text-center p-8 text-muted-foreground">
+              Aucune commande trouvée.
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
-      {filteredOrders.length === 0 && (
-        <div className="empty-state">
-          <FlaskConical className="empty-state-icon" />
-          <p className="text-muted-foreground">Aucune analyse trouvée</p>
-        </div>
-      )}
+      {/* Upload Modal */}
+      <Dialog open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Uploader un résultat</DialogTitle>
+            <DialogDescription>
+              Sélectionnez le fichier du rapport pour le dossier {selectedOrder?.dossierId}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="file">Fichier (PDF, Image...)</Label>
+              <Input id="file" type="file" onChange={e => setFile(e.target.files?.[0] || null)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={handleUpload}
+              disabled={!file || uploadMutation.isPending}
+            >
+              {uploadMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Envoyer le rapport
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

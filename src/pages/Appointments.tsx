@@ -1,121 +1,116 @@
 import { useState } from 'react';
-import { 
-  Plus, 
-  ChevronLeft, 
+import {
+  Plus,
+  ChevronLeft,
   ChevronRight,
   Clock,
   User,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { Appointment, AppointmentStatus } from '@/types';
+import { Appointment } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import api from '@/api/axios';
 import { format, addDays, startOfWeek, isSameDay, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
-// Mock data
-const generateMockAppointments = (): Appointment[] => {
-  const today = new Date();
-  return [
-    {
-      id: '1',
-      patientId: '1',
-      patientNom: 'Dupont',
-      patientPrenom: 'Marie',
-      medecinId: '1',
-      medecinNom: 'Dr. Martin',
-      dateHeure: new Date(today.setHours(9, 0, 0, 0)).toISOString(),
-      duree: 30,
-      motif: 'Consultation générale',
-      statut: 'CONFIRMED',
-    },
-    {
-      id: '2',
-      patientId: '2',
-      patientNom: 'Bernard',
-      patientPrenom: 'Pierre',
-      medecinId: '1',
-      medecinNom: 'Dr. Martin',
-      dateHeure: new Date(today.setHours(10, 30, 0, 0)).toISOString(),
-      duree: 45,
-      motif: 'Suivi diabète',
-      statut: 'PENDING',
-    },
-    {
-      id: '3',
-      patientId: '3',
-      patientNom: 'Leroy',
-      patientPrenom: 'Sophie',
-      medecinId: '1',
-      medecinNom: 'Dr. Martin',
-      dateHeure: new Date(today.setHours(14, 0, 0, 0)).toISOString(),
-      duree: 30,
-      motif: 'Renouvellement ordonnance',
-      statut: 'CONFIRMED',
-    },
-    {
-      id: '4',
-      patientId: '4',
-      patientNom: 'Moreau',
-      patientPrenom: 'Jean',
-      medecinId: '1',
-      medecinNom: 'Dr. Martin',
-      dateHeure: addDays(new Date().setHours(11, 0, 0, 0), 1).toString(),
-      duree: 60,
-      motif: 'Bilan complet',
-      statut: 'CONFIRMED',
-    },
-    {
-      id: '5',
-      patientId: '1',
-      patientNom: 'Dupont',
-      patientPrenom: 'Marie',
-      medecinId: '1',
-      medecinNom: 'Dr. Martin',
-      dateHeure: addDays(new Date().setHours(9, 30, 0, 0), 2).toString(),
-      duree: 30,
-      motif: 'Suivi post-opératoire',
-      statut: 'PENDING',
-    },
-  ];
-};
-
-const statusStyles: Record<AppointmentStatus, string> = {
+const statusStyles: Record<string, string> = {
   PENDING: 'bg-warning/10 text-warning border-warning/20',
   CONFIRMED: 'bg-success/10 text-success border-success/20',
   COMPLETED: 'bg-muted text-muted-foreground border-muted',
   CANCELLED: 'bg-destructive/10 text-destructive border-destructive/20',
 };
 
-const statusLabels: Record<AppointmentStatus, string> = {
-  PENDING: 'En attente',
-  CONFIRMED: 'Confirmé',
-  COMPLETED: 'Terminé',
-  CANCELLED: 'Annulé',
-};
-
 const Appointments = () => {
+  const { user, hasRole } = useAuth();
+  const queryClient = useQueryClient();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [appointments] = useState<Appointment[]>(generateMockAppointments());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [isBookModalOpen, setIsBookModalOpen] = useState(false);
+  const [bookingData, setBookingData] = useState({
+    dossierId: '',
+    medecinId: user?.id || '',
+    dateHeure: '',
+  });
+
+  const isDoctor = hasRole('MEDECIN');
+
+  const { data: appointments = [], isLoading } = useQuery({
+    queryKey: ['appointments', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const endpoint = isDoctor
+        ? `/appointments/doctor/${user.id}`
+        : `/appointments/patient/all`; // Fallback or mock list for others
+      try {
+        const response = await api.get<Appointment[]>(endpoint);
+        return response.data;
+      } catch (e) {
+        console.error(e);
+        return [];
+      }
+    },
+    enabled: !!user?.id
+  });
+
+  const bookMutation = useMutation({
+    mutationFn: (data: any) => api.post('/appointments', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      setIsBookModalOpen(false);
+      toast.success('Rendez-vous réservé');
+    },
+    onError: () => toast.error('Erreur lors de la réservation')
+  });
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   const getAppointmentsForDate = (date: Date) => {
-    return appointments.filter(apt => 
-      isSameDay(parseISO(apt.dateHeure), date)
+    return appointments.filter(apt =>
+      apt.dateHeure && isSameDay(parseISO(apt.dateHeure), date)
     );
   };
 
-  const selectedDateAppointments = selectedDate 
+  const selectedDateAppointments = selectedDate
     ? getAppointmentsForDate(selectedDate)
     : [];
 
   const navigateWeek = (direction: 'prev' | 'next') => {
     setCurrentDate(prev => addDays(prev, direction === 'next' ? 7 : -7));
   };
+
+  const handleBook = () => {
+    if (!bookingData.dossierId || !bookingData.dateHeure) {
+      toast.error('Veuillez remplir tous les champs');
+      return;
+    }
+    bookMutation.mutate({
+      ...bookingData,
+      status: 'PENDING'
+    });
+  };
+
+  if (isLoading) return (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    </div>
+  );
 
   return (
     <div className="page-transition space-y-6">
@@ -127,7 +122,7 @@ const Appointments = () => {
             Gérez votre planning de consultations
           </p>
         </div>
-        <Button className="gap-2 shrink-0">
+        <Button className="gap-2 shrink-0" onClick={() => setIsBookModalOpen(true)}>
           <Plus className="w-4 h-4" />
           Nouveau RDV
         </Button>
@@ -136,21 +131,13 @@ const Appointments = () => {
       {/* Week Navigation */}
       <div className="glass-card p-4">
         <div className="flex items-center justify-between mb-4">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => navigateWeek('prev')}
-          >
+          <Button variant="ghost" size="icon" onClick={() => navigateWeek('prev')}>
             <ChevronLeft className="w-5 h-5" />
           </Button>
           <h2 className="font-semibold text-lg font-display">
             {format(weekStart, 'MMMM yyyy', { locale: fr })}
           </h2>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => navigateWeek('next')}
-          >
+          <Button variant="ghost" size="icon" onClick={() => navigateWeek('next')}>
             <ChevronRight className="w-5 h-5" />
           </Button>
         </div>
@@ -168,9 +155,9 @@ const Appointments = () => {
                 onClick={() => setSelectedDate(day)}
                 className={cn(
                   "flex flex-col items-center p-3 rounded-xl transition-all duration-200",
-                  isSelected 
-                    ? "bg-primary text-primary-foreground shadow-lg scale-105" 
-                    : isToday 
+                  isSelected
+                    ? "bg-primary text-primary-foreground shadow-lg scale-105"
+                    : isToday
                       ? "bg-primary/10 hover:bg-primary/20"
                       : "hover:bg-muted"
                 )}
@@ -188,31 +175,8 @@ const Appointments = () => {
                   {format(day, 'd')}
                 </span>
                 {dayAppointments.length > 0 && (
-                  <div className={cn(
-                    "flex gap-0.5 mt-2",
-                    isSelected ? "opacity-80" : ""
-                  )}>
-                    {dayAppointments.slice(0, 3).map((apt, i) => (
-                      <div 
-                        key={i}
-                        className={cn(
-                          "w-1.5 h-1.5 rounded-full",
-                          isSelected 
-                            ? "bg-primary-foreground" 
-                            : apt.statut === 'CONFIRMED' 
-                              ? "bg-success" 
-                              : "bg-warning"
-                        )}
-                      />
-                    ))}
-                    {dayAppointments.length > 3 && (
-                      <span className={cn(
-                        "text-xs ml-1",
-                        isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
-                      )}>
-                        +{dayAppointments.length - 3}
-                      </span>
-                    )}
+                  <div className="flex gap-0.5 mt-2">
+                    <div className={cn("w-1.5 h-1.5 rounded-full", isSelected ? "bg-white" : "bg-primary")} />
                   </div>
                 )}
               </button>
@@ -245,17 +209,13 @@ const Appointments = () => {
           <div className="empty-state py-12">
             <Clock className="empty-state-icon" />
             <p className="text-muted-foreground">Aucun rendez-vous ce jour</p>
-            <Button className="mt-4 gap-2">
-              <Plus className="w-4 h-4" />
-              Ajouter un RDV
-            </Button>
           </div>
         ) : (
           <div className="divide-y divide-border">
             {selectedDateAppointments
               .sort((a, b) => new Date(a.dateHeure).getTime() - new Date(b.dateHeure).getTime())
               .map((appointment) => (
-                <div 
+                <div
                   key={appointment.id}
                   className="flex items-center gap-4 p-4 hover:bg-muted/30 transition-colors cursor-pointer"
                 >
@@ -263,33 +223,62 @@ const Appointments = () => {
                     <p className="text-lg font-bold text-foreground">
                       {format(parseISO(appointment.dateHeure), 'HH:mm')}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {appointment.duree} min
-                    </p>
                   </div>
                   <div className="w-1 h-12 rounded-full bg-primary/20" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4 text-muted-foreground" />
                       <p className="font-medium truncate">
-                        {appointment.patientPrenom} {appointment.patientNom}
+                        Dossier: {appointment.dossierId}
                       </p>
                     </div>
                     <p className="text-sm text-muted-foreground mt-0.5 truncate">
-                      {appointment.motif}
+                      {appointment.motif || 'Consultation'}
                     </p>
                   </div>
-                  <Badge 
-                    variant="outline" 
-                    className={cn(statusStyles[appointment.statut])}
+                  <Badge
+                    variant="outline"
+                    className={cn(statusStyles[appointment.status] || statusStyles.PENDING)}
                   >
-                    {statusLabels[appointment.statut]}
+                    {appointment.status}
                   </Badge>
                 </div>
               ))}
           </div>
         )}
       </div>
+
+      {/* Booking Modal */}
+      <Dialog open={isBookModalOpen} onOpenChange={setIsBookModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Réserver un rendez-vous</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>ID Dossier</Label>
+              <Input
+                value={bookingData.dossierId}
+                onChange={e => setBookingData({ ...bookingData, dossierId: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Date et Heure</Label>
+              <Input
+                type="datetime-local"
+                value={bookingData.dateHeure}
+                onChange={e => setBookingData({ ...bookingData, dateHeure: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleBook} disabled={bookMutation.isPending}>
+              {bookMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirmer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

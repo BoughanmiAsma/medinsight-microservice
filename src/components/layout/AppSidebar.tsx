@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Users, 
-  FolderOpen, 
-  Calendar, 
-  Stethoscope, 
-  FlaskConical, 
+import {
+  LayoutDashboard,
+  Users,
+  FolderOpen,
+  Calendar,
+  Stethoscope,
+  FlaskConical,
   FileText,
   Settings,
   LogOut,
@@ -34,46 +34,46 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { 
-    title: 'Tableau de bord', 
-    href: '/', 
-    icon: LayoutDashboard 
+  {
+    title: 'Tableau de bord',
+    href: '/',
+    icon: LayoutDashboard
   },
-  { 
-    title: 'Personnel', 
-    href: '/staff', 
+  {
+    title: 'Personnel',
+    href: '/staff',
     icon: Users,
     roles: ['ADMIN']
   },
-  { 
-    title: 'Dossiers Patients', 
-    href: '/patients', 
+  {
+    title: 'Dossiers Patients',
+    href: '/patients',
     icon: FolderOpen,
     roles: ['ADMIN', 'MEDECIN', 'INFIRMIER', 'SECRETAIRE']
   },
-  { 
-    title: 'Rendez-vous', 
-    href: '/appointments', 
+  {
+    title: 'Rendez-vous',
+    href: '/appointments',
     icon: Calendar,
     roles: ['ADMIN', 'MEDECIN', 'SECRETAIRE']
   },
-  { 
-    title: 'Consultations', 
-    href: '/consultations', 
+  {
+    title: 'Consultations',
+    href: '/consultations',
     icon: Stethoscope,
-    roles: ['MEDECIN', 'INFIRMIER']
+    roles: ['ADMIN', 'MEDECIN', 'INFIRMIER']
   },
-  { 
-    title: 'Laboratoire', 
-    href: '/lab', 
+  {
+    title: 'Laboratoire',
+    href: '/lab',
     icon: FlaskConical,
-    roles: ['MEDECIN', 'TECHNICIEN']
+    roles: ['ADMIN', 'MEDECIN', 'TECHNICIEN']
   },
-  { 
-    title: 'Ordonnances', 
-    href: '/prescriptions', 
+  {
+    title: 'Ordonnances',
+    href: '/prescriptions',
     icon: FileText,
-    roles: ['MEDECIN']
+    roles: ['ADMIN', 'MEDECIN']
   },
 ];
 
@@ -149,7 +149,7 @@ export function AppSidebar() {
       <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto custom-scrollbar">
         {filteredNavItems.map((item) => {
           const isActive = location.pathname === item.href;
-          
+
           if (collapsed) {
             return (
               <Tooltip key={item.href} delayDuration={0}>
@@ -158,8 +158,8 @@ export function AppSidebar() {
                     to={item.href}
                     className={cn(
                       "flex items-center justify-center p-3 rounded-lg transition-all duration-200",
-                      isActive 
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground" 
+                      isActive
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
                         : "hover:bg-sidebar-accent/50"
                     )}
                   >
@@ -182,8 +182,8 @@ export function AppSidebar() {
               to={item.href}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
-                isActive 
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground" 
+                isActive
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
                   : "hover:bg-sidebar-accent/50"
               )}
             >
@@ -234,9 +234,9 @@ export function AppSidebar() {
               </Tooltip>
               <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     className="h-10 w-10"
                     onClick={logout}
                   >
@@ -252,9 +252,9 @@ export function AppSidebar() {
                 <Settings className="h-4 w-4" />
                 Paramètres
               </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
                 onClick={logout}
               >
