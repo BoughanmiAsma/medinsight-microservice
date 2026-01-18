@@ -22,6 +22,11 @@ public class KeycloakConfig {
     private String clientSecret;
 
     @Bean
+    public org.springframework.web.client.RestTemplate restTemplate() {
+        return new org.springframework.web.client.RestTemplate();
+    }
+
+    @Bean
     public Keycloak keycloak() {
         return KeycloakBuilder.builder()
                 .serverUrl(serverUrl)

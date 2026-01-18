@@ -65,7 +65,8 @@ public class StaffService {
         log.info("Staff créé avec succès: {}", savedStaff.getId());
 
         String generatedPassword = generateRandomPassword();
-        String kcId = keycloakUserService.createUser(savedStaff.getEmail(), savedStaff.getEmail(), generatedPassword);
+        String kcId = keycloakUserService.createUser(savedStaff.getEmail(), savedStaff.getEmail(),
+                savedStaff.getPrenom(), savedStaff.getNom(), generatedPassword);
 
         String roleKeycloak;
         switch (staffDTO.getType()) {
@@ -74,6 +75,8 @@ public class StaffService {
             case INFIRMIER -> roleKeycloak = "ROLE_INFIRMIER";
             case TECHNICIEN -> roleKeycloak = "ROLE_TECHNICIEN";
             case AIDE_SOIGNANT -> roleKeycloak = "ROLE_AIDE_SOIGNANT";
+            case LABORATOIRE -> roleKeycloak = "ROLE_LABORATOIRE";
+            case PHARMACIE -> roleKeycloak = "ROLE_PHARMACIEN";
             default -> throw new IllegalArgumentException("Type de staff inconnu");
         }
 
@@ -128,6 +131,17 @@ public class StaffService {
 
         Staff updatedStaff = staffRepository.save(staff);
         log.info("Staff modifié avec succès: {}", updatedStaff.getId());
+
+        // Sync with Keycloak if keycloakId exists
+        if (updatedStaff.getKeycloakId() != null) {
+            try {
+                keycloakUserService.updateUser(updatedStaff.getKeycloakId(), updatedStaff.getPrenom(),
+                        updatedStaff.getNom());
+            } catch (Exception e) {
+                log.error("Erreur lors de la mise à jour Keycloak pour {}: {}", updatedStaff.getKeycloakId(),
+                        e.getMessage());
+            }
+        }
 
         return toDTO(updatedStaff);
     }

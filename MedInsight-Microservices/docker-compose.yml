@@ -69,8 +69,12 @@ services:
       SPRING_DATASOURCE_PASSWORD: password
       # Kafka
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      # Keycloak (Using host.docker.internal because Keycloak is in another stack)
+      # Keycloak
       KEYCLOAK_SERVER_URL: http://host.docker.internal:8180
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8180/realms/microservices-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://host.docker.internal:8180/realms/microservices-realm/protocol/openid-connect/certs
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - postgres
       - kafka
@@ -92,6 +96,8 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       # Keycloak
       KEYCLOAK_SERVER_URL: http://host.docker.internal:8180
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8180/realms/microservices-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://host.docker.internal:8180/realms/microservices-realm/protocol/openid-connect/certs
     depends_on:
       - postgres
       - kafka
@@ -113,6 +119,8 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       # Keycloak
       KEYCLOAK_SERVER_URL: http://host.docker.internal:8180
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8180/realms/microservices-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://host.docker.internal:8180/realms/microservices-realm/protocol/openid-connect/certs
     depends_on:
       - postgres
       - kafka
@@ -133,6 +141,12 @@ services:
       SPRING_DATASOURCE_PASSWORD: secret
       # Keycloak
       KEYCLOAK_SERVER_URL: http://host.docker.internal:8180
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8180/realms/microservices-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://host.docker.internal:8180/realms/microservices-realm/protocol/openid-connect/certs
+      # Kafka
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - mysql
     networks:
@@ -152,6 +166,10 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       # Keycloak
       KEYCLOAK_SERVER_URL: http://host.docker.internal:8180
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8180/realms/microservices-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://host.docker.internal:8180/realms/microservices-realm/protocol/openid-connect/certs
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - postgres
       - kafka

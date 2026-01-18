@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Collections;
 
 @Data
 @Builder
@@ -27,7 +28,7 @@ public class UserContext {
         UserContext ctx = current.get();
         if (ctx == null) {
             return UserContext.builder()
-                    .roles(java.util.Collections.emptyList())
+                    .roles(Collections.emptyList())
                     .build();
         }
         return ctx;
@@ -38,6 +39,26 @@ public class UserContext {
     }
 
     public boolean hasRole(String role) {
-        return roles != null && (roles.contains(role) || roles.contains("ROLE_ADMIN"));
+        if (roles == null)
+            return false;
+
+        // Check for Admin (any case, with or without ROLE_ prefix)
+        boolean isAdmin = roles.stream().anyMatch(r -> r.equalsIgnoreCase("ADMIN") ||
+                r.equalsIgnoreCase("ROLE_ADMIN"));
+        if (isAdmin)
+            return true;
+
+        // Check for specific role (case-insensitive)
+        return roles.stream().anyMatch(r -> r.equalsIgnoreCase(role) ||
+                r.equalsIgnoreCase("ROLE_" + role));
+    }
+
+    public boolean hasAnyRole(String... requiredRoles) {
+        for (String role : requiredRoles) {
+            if (hasRole(role)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

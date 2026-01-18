@@ -15,6 +15,7 @@ public class LabOrderConsumer {
 
     private final LabOrderRepository labOrderRepository;
     private final ObjectMapper objectMapper;
+    private final KafkaProducerService kafkaProducerService;
 
     @KafkaListener(topics = "lab.requests", groupId = "lab-group")
     public void consumeLabRequest(String message) {
@@ -42,6 +43,13 @@ public class LabOrderConsumer {
 
             labOrderRepository.save(order);
             log.info("LabOrder saved: {}", order);
+
+            // Send completion event to dossier-service
+            java.util.Map<String, String> resultPayload = java.util.Map.of(
+                    "dossierId", order.getDossierId(),
+                    "fileName", "Analysis_" + order.getTestCode(),
+                    "fileUrl", "http://lab-storage/" + order.getId());
+            kafkaProducerService.sendAnalysisCompleted("analysis.completed", resultPayload);
 
         } catch (Exception e) {
             log.error("Error processing lab request", e);

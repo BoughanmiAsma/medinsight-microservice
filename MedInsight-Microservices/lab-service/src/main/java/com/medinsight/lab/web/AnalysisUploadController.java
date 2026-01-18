@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/lab")
+@RequestMapping("/lab")
 @RequiredArgsConstructor
 public class AnalysisUploadController {
 
@@ -32,7 +32,7 @@ public class AnalysisUploadController {
     private final AnalysisReportRepository analysisReportRepository;
     private final KafkaProducerService kafkaProducerService;
 
-    @Value("${file.download-base-url:http://localhost:8200/api/lab/files/}")
+    @Value("${file.download-base-url:http://localhost:8200/lab/files/}")
     private String downloadBaseUrl;
 
     @PostMapping("/upload")

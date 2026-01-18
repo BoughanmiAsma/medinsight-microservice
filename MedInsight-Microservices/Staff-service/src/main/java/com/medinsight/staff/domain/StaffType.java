@@ -5,5 +5,7 @@ public enum StaffType {
     SECRETAIRE,
     INFIRMIER,
     TECHNICIEN,
-    AIDE_SOIGNANT
+    AIDE_SOIGNANT,
+    LABORATOIRE,
+    PHARMACIE
 }
