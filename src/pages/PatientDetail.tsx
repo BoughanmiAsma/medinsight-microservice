@@ -78,6 +78,15 @@ const PatientDetail = () => {
         enabled: !!id
     });
 
+    const { data: prescriptions = [], isLoading: loadingPrescriptions } = useQuery({
+        queryKey: ['prescriptions', id],
+        queryFn: async () => {
+            const resp = await api.get<any[]>(`/prescriptions/dossier/${id}`);
+            return resp.data;
+        },
+        enabled: !!id
+    });
+
     // Mutations
     const consultMutation = useMutation({
         mutationFn: (data: Partial<Consultation>) => api.post(`/dossiers/${id}/consultations`, data),
@@ -103,6 +112,7 @@ const PatientDetail = () => {
         mutationFn: (details: string) => api.post(`/dossiers/${id}/consultations/${consultations[0]?.id || 'latest'}/prescriptions`, { medicationDetails: details }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['consultations', id] });
+            queryClient.invalidateQueries({ queryKey: ['prescriptions', id] });
             setIsPrescriptionModalOpen(false);
             setMedicationDetails('');
             toast.success('Ordonnance envoyée');
@@ -175,6 +185,9 @@ const PatientDetail = () => {
                             <TabsTrigger value="analyses" className="gap-2">
                                 <Beaker className="w-4 h-4" /> Analyses
                             </TabsTrigger>
+                            <TabsTrigger value="prescriptions" className="gap-2">
+                                <FileText className="w-4 h-4" /> Ordonnances
+                            </TabsTrigger>
                             <TabsTrigger value="vitals" className="gap-2">
                                 <ClipboardList className="w-4 h-4" /> Antécédents
                             </TabsTrigger>
@@ -189,22 +202,22 @@ const PatientDetail = () => {
                                         <CardHeader className="pb-2">
                                             <div className="flex justify-between items-start">
                                                 <div>
-                                                    <CardTitle className="text-md">{c.motif}</CardTitle>
+                                                    <CardTitle className="text-md">{c.reason || c.motif}</CardTitle>
                                                     <CardDescription>
                                                         {format(parseISO(c.consultationDate), 'dd MMMM yyyy HH:mm', { locale: fr })}
                                                     </CardDescription>
                                                 </div>
-                                                <Badge variant="outline">Dr. {c.medecinNom || 'Inconnu'}</Badge>
+                                                <Badge variant="outline">Dr. {c.medecinNom || c.doctorLastName || 'Inconnu'}</Badge>
                                             </div>
                                         </CardHeader>
                                         <CardContent className="space-y-2">
                                             <div>
                                                 <p className="text-xs font-semibold text-muted-foreground uppercase">Diagnostic</p>
-                                                <p className="text-sm">{c.diagnostic || 'N/A'}</p>
+                                                <p className="text-sm">{c.diagnosis || c.diagnostic || 'N/A'}</p>
                                             </div>
                                             <div>
                                                 <p className="text-xs font-semibold text-muted-foreground uppercase">Notes</p>
-                                                <p className="text-sm">{c.notes || 'N/A'}</p>
+                                                <p className="text-sm">{c.observations || c.notes || 'N/A'}</p>
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -230,8 +243,8 @@ const PatientDetail = () => {
                                             </div>
                                         </CardHeader>
                                         <CardContent>
-                                            <p className="text-sm font-medium">{a.testType || 'Analyse de routine'}</p>
-                                            <p className="text-xs text-muted-foreground">Daté du {format(parseISO(a.dateResultat || a.createdAt), 'dd/MM/yyyy')}</p>
+                                            <p className="text-sm font-medium">{a.testType || a.fileName || 'Analyse de routine'}</p>
+                                            <p className="text-xs text-muted-foreground">Daté du {format(parseISO(a.dateResultat || a.createdAt || a.receivedAt), 'dd/MM/yyyy')}</p>
                                             <Button variant="link" className="px-0 h-auto text-primary mt-2">Voir le rapport financier</Button>
                                         </CardContent>
                                     </Card>
@@ -240,6 +253,36 @@ const PatientDetail = () => {
                                 <Card className="flex flex-col items-center justify-center p-12 text-center">
                                     <Beaker className="w-12 h-12 text-muted-foreground mb-4 opacity-20" />
                                     <p className="text-muted-foreground">Aucun résultat d'analyse disponible</p>
+                                </Card>
+                            )}
+                        </TabsContent>
+
+                        <TabsContent value="prescriptions" className="space-y-4">
+                            {loadingPrescriptions ? (
+                                <div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div>
+                            ) : prescriptions.length > 0 ? (
+                                prescriptions.map((p, idx) => (
+                                    <Card key={idx}>
+                                        <CardHeader>
+                                            <div className="flex justify-between">
+                                                <CardTitle className="text-md">Ordonnance #{p.id}</CardTitle>
+                                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{p.status || 'EN_ATTENTE'}</Badge>
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <p className="text-sm bg-muted/30 p-3 rounded-md border border-border/50">{p.medicationDetails || 'Détails non disponibles'}</p>
+                                            <div className="flex justify-end mt-2">
+                                                <Button variant="ghost" size="sm" className="gap-2">
+                                                    <Printer className="w-4 h-4" /> Imprimer
+                                                </Button>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))
+                            ) : (
+                                <Card className="flex flex-col items-center justify-center p-12 text-center">
+                                    <FileText className="w-12 h-12 text-muted-foreground mb-4 opacity-20" />
+                                    <p className="text-muted-foreground">Aucune ordonnance enregistrée</p>
                                 </Card>
                             )}
                         </TabsContent>
@@ -276,11 +319,15 @@ const PatientDetail = () => {
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
                             <Label>Motif</Label>
-                            <Input value={consultationData.motif} onChange={e => setConsultationData({ ...consultationData, motif: e.target.value })} />
+                            <Input value={consultationData.reason} onChange={e => setConsultationData({ ...consultationData, reason: e.target.value })} />
                         </div>
                         <div className="grid gap-2">
                             <Label>Diagnostic</Label>
-                            <Textarea value={consultationData.diagnostic} onChange={e => setConsultationData({ ...consultationData, diagnostic: e.target.value })} />
+                            <Textarea value={consultationData.diagnosis} onChange={e => setConsultationData({ ...consultationData, diagnosis: e.target.value })} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label>Notes (Observations)</Label>
+                            <Textarea value={consultationData.observations} onChange={e => setConsultationData({ ...consultationData, observations: e.target.value })} />
                         </div>
                     </div>
                     <DialogFooter>

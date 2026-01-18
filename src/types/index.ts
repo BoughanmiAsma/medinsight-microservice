@@ -75,11 +75,17 @@ export interface Consultation {
   dossierId: string;
   medecinId: string;
   medecinNom: string;
+  doctorLastName?: string;
+  doctorFirstName?: string;
   consultationDate: string;
   motif: string;
+  reason?: string;
   symptomes?: string;
   diagnostic?: string;
+  diagnosis?: string;
   notes?: string;
+  observations?: string;
+  recommendations?: string;
   prescriptions?: Prescription[];
   labOrders?: LabOrder[];
 }

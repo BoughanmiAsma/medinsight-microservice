@@ -102,6 +102,7 @@ const Appointments = () => {
     }
     bookMutation.mutate({
       ...bookingData,
+      appointmentDate: bookingData.dateHeure, // Map to backend field
       status: 'PENDING'
     });
   };
