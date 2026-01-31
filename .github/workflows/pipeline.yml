@@ -5,81 +5,59 @@ on:
     branches: 
        - main
        - feature/k8s
+       - feature/appointement-service
 
 env:
   DOCKER_IMAGE_PREFIX: boughanmiasma/pds
   NAMESPACE: medinsight
-  K8S_CONTEXT: github-context
+  K8s_CONTEXT: github-context
 
 jobs:
-  build-and-deploy:
-    name: Build & Deploy Microservices
+  secret-scan:
+    name: 🔐 Secret Scanning (TruffleHog)
     runs-on: ubuntu-latest
-    
-    strategy:
-      fail-fast: false
-      matrix:
-        service:
-          - MedInsight-Microservices/dossier-service
-          - MedInsight-Microservices/lab-service
-          - MedInsight-Microservices/ordonnance-service
-          - MedInsight-Microservices/Staff-service
-
     steps:
-      # 1. Préparation de l'environnement
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog OSS
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --only-verified
+  setup-infrastructure:
+    name: Setup Common Infrastructure
+    runs-on: ubuntu-latest
+    steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 20
-        uses: actions/setup-java@v4
-        with:
-          java-version: '20'
-          distribution: 'temurin'
-          cache: 'maven'
-
-      # 2. Build de l'artéfact Java
-      - name: Build with Maven
-        working-directory: ./${{ matrix.service }}
-        run: mvn clean package -DskipTests -B
-
-      # 3. Gestion des images Docker
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build & Push Docker Image
-        run: |
-          SERVICE_KEY=$(basename ${{ matrix.service }})
-          # Mappage des noms pour correspondre aux manifests
-          if [ "$SERVICE_KEY" == "lab-service" ]; then
-            IMAGE_NAME="laboratoire"
-          else
-            IMAGE_NAME=$(echo $SERVICE_KEY | sed 's/-service//I' | tr '[:upper:]' '[:lower:]')
-          fi
-          
-          IMAGE_TAG="${{ env.DOCKER_IMAGE_PREFIX }}:service-$IMAGE_NAME"
-          
-          echo "Building image $IMAGE_TAG..."
-          docker build -t "$IMAGE_TAG" ./${{ matrix.service }}
-          docker push "$IMAGE_TAG"
-
-      # 4. Configuration Kubernetes
       - name: Set up Kubectl
         uses: azure/setup-kubectl@v4
         with:
           version: 'latest'
 
-      - name: Configure Kubeconfig
+      - name: Configure kubeconfig
         uses: azure/k8s-set-context@v4
         with:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBECONFIG }}
-          context: ${{ env.K8S_CONTEXT }}
+          # context: ${{ env.K8S_CONTEXT }} # Optional: only if specified in kubeconfig
 
-      # 5. Déploiement Infrastructure (Exécuté en parallèle pour chaque branche de la matrice, idempotence via kubectl apply)
-      - name: Deploy Infrastructure
+      - name: IaC Vulnerability Scan (K8s)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          scan-ref: 'k8s/'
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+
+      - name: Deploy Base Infrastructure
         env:
           CLUSTER_DOMAIN: ${{ secrets.CLUSTER_DOMAIN }}
         run: |
@@ -90,19 +68,198 @@ jobs:
           kubectl apply -f k8s/keycloak/ -n ${{ env.NAMESPACE }}
           kubectl apply -f k8s/kong/ -n ${{ env.NAMESPACE }}
           
-          # Seul l'Ingress a besoin de CLUSTER_DOMAIN
-          envsubst < k8s/ingress.yml | kubectl apply -f - -n ${{ env.NAMESPACE }}
+          # Ingress désactivé - Les services utilisent NodePort
+          # if [ -f "k8s/ingress.yml" ]; then
+          #   envsubst < k8s/ingress.yml | kubectl apply -f - -n ${{ env.NAMESPACE }}
+          # fi
 
-      # 6. Déploiement du Microservice
+  build-and-deploy:
+    name: Build & Deploy Microservices
+    needs: setup-infrastructure
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service_path:
+          - MedInsight-Microservices/dossier-service
+          - MedInsight-Microservices/lab-service
+          - MedInsight-Microservices/ordonnance-service
+          - MedInsight-Microservices/Staff-service
+          - MedInsight-Microservices/appointment-service
+
+    services:
+      sonarqube:
+        image: sonarqube:community
+        ports:
+          - 9000:9000
+        options: --health-cmd="curl -f http://localhost:9000/api/system/status || exit 1" --health-interval=10s --health-timeout=5s --health-retries=20
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Dependency Vulnerability Scan (SCA)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '${{ matrix.service_path }}'
+          format: 'table'
+          vuln-type: 'library'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+
+      - name: Build with Maven
+        working-directory: ./${{ matrix.service_path }}
+        run: mvn clean package -DskipTests -B
+
+      - name: Wait for SonarQube to be ready
+        run: |
+          echo "Waiting for SonarQube to start..."
+          # Attente active avec timeout pour s'assurer que SonarQube est UP
+          for i in {1..30}; do
+            if curl -s -u admin:admin http://localhost:9000/api/system/status | grep -q "UP"; then
+              echo "SonarQube is UP!"
+              break
+            fi
+            echo "SonarQube starting... ($i/30)"
+            sleep 10
+          done
+
+      - name: Configure SonarQube & Generate Token
+        run: |
+          echo "Setting up SonarQube authentication..."
+          # 1. Changer le mot de passe par défaut (Obligatoire Sonar 10+)
+          # UTILISER UN SECRET GITHUB POUR LE MOT DE PASSE !
+          NEW_PASS="${{ secrets.SONAR_ADMIN_PASSWORD }}"
+          if [ -z "$NEW_PASS" ]; then NEW_PASS="MedInsightSafe2025_"; echo "WARNING: Using default password for demo. Set SONAR_ADMIN_PASSWORD secret!"; fi
+          
+          curl -s -u admin:admin -X POST "http://localhost:9000/api/users/change_password?login=admin&previousPassword=admin&password=$NEW_PASS" || echo "Password already changed or error"
+          
+          # 2. Générer un Token Global d'Analyse (on utilise jq pour la fiabilité)
+          # On ajoute un timestamp au nom du token pour éviter les conflits
+          TOKEN_NAME="CI-Scanner-$(date +%s)"
+          TOKEN_JSON=$(curl -s -u admin:$NEW_PASS -X POST "http://localhost:9000/api/user_tokens/generate?name=$TOKEN_NAME&type=GLOBAL_ANALYSIS_TOKEN")
+          
+          # Extraction du token avec jq (correction de la syntaxe un peu trop complexe)
+          SONAR_TOKEN=$(echo "$TOKEN_JSON" | jq -r '.token')
+          
+          if [ "$SONAR_TOKEN" == "null" ] || [ -z "$SONAR_TOKEN" ]; then
+            echo "Failed to generate token. API Response: $TOKEN_JSON"
+            exit 1
+          fi
+          
+          # 3. Exporter le token pour les steps suivants
+          echo "SONAR_TOKEN=$SONAR_TOKEN" >> $GITHUB_ENV
+          echo "SonarQube configured successfully."
+
+      - name: SonarQube Analysis
+        working-directory: ./${{ matrix.service_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+          -DskipTests \
+          -Dsonar.projectKey=$(basename ${{ matrix.service_path }} | tr '[:upper:]' '[:lower:]') \
+          -Dsonar.projectName=$(basename ${{ matrix.service_path }}) \
+          -Dsonar.host.url=http://localhost:9000 \
+          -Dsonar.token="${{ env.SONAR_TOKEN }}"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build & Push Docker Image
+        run: |
+          SERVICE_DIR=$(basename ${{ matrix.service_path }})
+          
+          # Determine Image name and K8s manifest name
+          if [ "$SERVICE_DIR" == "lab-service" ]; then
+            IMAGE_NAME="laboratoire"
+            K8S_DIR="laboratoire-service"
+          elif [ "$SERVICE_DIR" == "Staff-service" ]; then
+            IMAGE_NAME="staff"
+            K8S_DIR="staff-service"
+          else
+            IMAGE_NAME=$(echo $SERVICE_DIR | sed 's/-service//I' | tr '[:upper:]' '[:lower:]')
+            K8S_DIR=$SERVICE_DIR
+          fi
+          
+          IMAGE_TAG="${{ env.DOCKER_IMAGE_PREFIX }}:service-$IMAGE_NAME"
+          
+          echo "Building image $IMAGE_TAG for service in $K8S_DIR..."
+          docker build -t "$IMAGE_TAG" ./${{ matrix.service_path }}
+          docker push "$IMAGE_TAG"
+          
+          # Store K8S_DIR and IMAGE_TAG for next steps
+          echo "K8S_DIR=$K8S_DIR" >> $GITHUB_ENV
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Run Trivy Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.IMAGE_TAG }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+          
+      - name: Set up Kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Configure kubeconfig
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG }}
+
       - name: Deploy Microservice
         run: |
-          SERVICE_KEY=$(basename ${{ matrix.service }})
-          MANIFEST_PATH="k8s/${SERVICE_KEY}/${SERVICE_KEY}.yml"
+          # Use K8S_DIR from previous step or re-derive
+          MANIFEST_DIR="${{ env.K8S_DIR }}"
+          MANIFEST_FILE="${MANIFEST_DIR}.yml"
+          MANIFEST_PATH="k8s/${MANIFEST_DIR}/${MANIFEST_FILE}"
           
           if [ -f "$MANIFEST_PATH" ]; then
-            echo "Deploying $SERVICE_KEY..."
+            echo "Deploying from $MANIFEST_PATH..."
             kubectl apply -f "$MANIFEST_PATH" -n ${{ env.NAMESPACE }}
-          else
+            
+            # Application du PVC spécifique au lab s'il existe
+            if [ "$MANIFEST_DIR" == "laboratoire-service" ] && [ -f "k8s/laboratoire-service/pvc.yml" ]; then
+               kubectl apply -f k8s/laboratoire-service/pvc.yml -n ${{ env.NAMESPACE }}
+            fi
+            
             echo "Error: Manifest $MANIFEST_PATH not found"
             exit 1
           fi
+
+  dast-security-scan:
+    name: DAST - OWASP ZAP Scan
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Pull OWASP ZAP Image
+        run: docker pull ghcr.io/zaproxy/zaproxy:stable
+
+      - name: ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          # IMPORTANT: Remplacez l'URL par l'adresse de votre Gateway Kong ou LoadBalancer
+          target: 'http://52.205.61.44:8200' 
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a'
+          fail_action: false # Ne pas casser le pipeline immédiatement pour le DAST (souvent des faux positifs)
