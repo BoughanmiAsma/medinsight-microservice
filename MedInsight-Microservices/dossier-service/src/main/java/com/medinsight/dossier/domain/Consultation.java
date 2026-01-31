@@ -1,5 +1,6 @@
 package com.medinsight.dossier.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
@@ -17,9 +18,16 @@ public class Consultation {
     private String dossierId;
     private String doctorLastName;
     private String doctorFirstName;
+
+    @Column(columnDefinition = "TEXT")
     private String reason; // Motif
+
+    @Column(columnDefinition = "TEXT")
     private String observations;
+
+    @Column(columnDefinition = "TEXT")
     private String diagnosis;
+
     private String recommendations;
     private LocalDateTime consultationDate;
 }

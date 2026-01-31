@@ -7,6 +7,7 @@ import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
 
 @Entity
 @Data
@@ -20,4 +21,5 @@ public class Prescription {
     private String consultationId;
     private String medicationDetails;
     private String status;
+    private LocalDateTime createdAt;
 }
