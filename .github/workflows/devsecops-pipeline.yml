@@ -44,7 +44,6 @@ jobs:
           - MedInsight-Microservices/lab-service
           - MedInsight-Microservices/ordonnance-service
           - MedInsight-Microservices/Staff-service
-          - MedInsight-Microservices/appointment-service
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -98,7 +97,6 @@ jobs:
           - MedInsight-Microservices/lab-service
           - MedInsight-Microservices/ordonnance-service
           - MedInsight-Microservices/Staff-service
-          - MedInsight-Microservices/appointment-service
 
     services:
       sonarqube:
