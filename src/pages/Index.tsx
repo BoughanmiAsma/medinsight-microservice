@@ -80,14 +80,14 @@ const mockPatients: Patient[] = [
 ];
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
 
   return (
     <div className="page-transition space-y-6">
       {/* Header */}
       <div className="page-header">
         <h1 className="page-title">
-          Bonjour, Dr. {user?.prenom} 👋
+          Bonjour, {hasRole('MEDECIN') ? 'Dr. ' : ''}{user?.prenom} 👋
         </h1>
         <p className="page-subtitle">
           Voici un aperçu de votre journée

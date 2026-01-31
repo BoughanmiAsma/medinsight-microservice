@@ -55,7 +55,7 @@ const statusConfig: Record<string, { label: string; icon: React.ComponentType<an
 
 const LabResults = () => {
   const { hasRole } = useAuth();
-  const isTechnician = hasRole('TECHNICIEN') || hasRole('ADMIN');
+  const isTechnician = hasRole('TECHNICIEN') || hasRole('ADMIN') || hasRole('LABORATOIRE');
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');

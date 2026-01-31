@@ -57,7 +57,7 @@ import { Loader2 } from 'lucide-react';
 
 const Patients = () => {
   const { hasRole } = useAuth();
-  const isAuthorized = hasRole('MEDECIN') || hasRole('SECRETAIRE') || hasRole('ADMIN');
+  const isAuthorized = hasRole('MEDECIN') || hasRole('SECRETAIRE') || hasRole('ADMIN') || hasRole('LABORATOIRE') || hasRole('PHARMACIE');
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newPatient, setNewPatient] = useState<Partial<Patient>>({

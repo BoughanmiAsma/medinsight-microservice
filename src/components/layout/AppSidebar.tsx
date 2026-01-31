@@ -49,7 +49,7 @@ const navItems: NavItem[] = [
     title: 'Dossiers Patients',
     href: '/patients',
     icon: FolderOpen,
-    roles: ['ADMIN', 'MEDECIN', 'INFIRMIER', 'SECRETAIRE']
+    roles: ['ADMIN', 'MEDECIN', 'INFIRMIER', 'SECRETAIRE', 'LABORATOIRE', 'PHARMACIE']
   },
   {
     title: 'Rendez-vous',
@@ -67,7 +67,7 @@ const navItems: NavItem[] = [
     title: 'Laboratoire',
     href: '/lab',
     icon: FlaskConical,
-    roles: ['ADMIN', 'MEDECIN', 'TECHNICIEN']
+    roles: ['ADMIN', 'MEDECIN', 'TECHNICIEN', 'LABORATOIRE']
   },
   {
     title: 'Ordonnances',
@@ -209,7 +209,7 @@ export function AppSidebar() {
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">
-                Dr. {user.prenom} {user.nom}
+                {hasAnyRole(['MEDECIN']) ? 'Dr. ' : ''}{user.prenom} {user.nom}
               </p>
               <p className="text-xs text-muted-foreground truncate">
                 {user.specialite}

@@ -103,7 +103,10 @@ const Staff = () => {
       setNewStaff({ type: 'MEDECIN', actif: true });
       toast.success('Membre ajouté avec succès');
     },
-    onError: () => toast.error("Erreur lors de l'ajout du membre")
+    onError: (error: any) => {
+      const message = error.response?.data?.message || error.response?.data || "Erreur lors de l'ajout du membre";
+      toast.error(typeof message === 'string' ? message : "Erreur lors de l'ajout du membre");
+    }
   });
 
   const updateMutation = useMutation({
@@ -236,6 +239,18 @@ const Staff = () => {
                     <Input id="licence" className="col-span-3"
                       value={newStaff.numeroLicence || ''}
                       onChange={e => setNewStaff({ ...newStaff, numeroLicence: e.target.value })} />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="actif" className="text-right">Statut</Label>
+                    <Select value={newStaff.actif ? 'true' : 'false'} onValueChange={(v) => setNewStaff({ ...newStaff, actif: v === 'true' })}>
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="true">Actif</SelectItem>
+                        <SelectItem value="false">Inactif</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <DialogFooter>
