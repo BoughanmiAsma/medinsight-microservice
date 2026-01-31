@@ -6,6 +6,7 @@ on:
        - main
        - feature/k8s
        - feature/appointement-service
+       - feature/DevSecOps
 
 env:
   DOCKER_IMAGE_PREFIX: boughanmiasma/pds
