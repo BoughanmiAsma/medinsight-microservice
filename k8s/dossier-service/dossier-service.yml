@@ -5,8 +5,8 @@ metadata:
   namespace: medinsight
 type: Opaque
 stringData:
-  DB_PASSWORD: ${DB_PASSWORD}
-  KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
+  DB_PASSWORD: MedInsight123!
+  KEYCLOAK_CLIENT_SECRET: medinsight-secret-key-123
 ---
 apiVersion: v1
 kind: ConfigMap

@@ -5,8 +5,8 @@ metadata:
   namespace: medinsight
 type: Opaque
 stringData:
-  POSTGRES_USER: ${POSTGRES_USER}
-  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  POSTGRES_USER: admin
+  POSTGRES_PASSWORD: MedInsight123!
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -61,12 +61,12 @@ spec:
             cpu: "500m"
         livenessProbe:
           exec:
-            command: ["pg_isready", "-U", "admin"]
+            command: ["pg_isready", "-U", "admin", "-d", "medinsight_platform"]
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           exec:
-            command: ["pg_isready", "-U", "admin"]
+            command: ["pg_isready", "-U", "admin", "-d", "medinsight_platform"]
           initialDelaySeconds: 5
           periodSeconds: 10
 ---

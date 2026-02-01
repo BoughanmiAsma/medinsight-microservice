@@ -5,9 +5,9 @@ metadata:
   namespace: medinsight
 type: Opaque
 stringData:
-  MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-  MYSQL_USER: ${MYSQL_USER}
-  MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+  MYSQL_ROOT_PASSWORD: RootMedInsight123!
+  MYSQL_USER: admin
+  MYSQL_PASSWORD: MedInsight123!
 ---
 apiVersion: v1
 kind: ConfigMap
