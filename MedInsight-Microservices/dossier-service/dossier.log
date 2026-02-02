@@ -1,0 +1,35 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.0)
+
+2025-12-22T17:37:28.588+01:00  INFO 20684 --- [dossier-service] [           main] c.m.dossier.DossierServiceApplication    : Starting DossierServiceApplication v0.0.1-SNAPSHOT using Java 17.0.11 with PID 20684 (C:\Users\asmab\MedInsight-Microservices-new\MedInsight-Microservices\dossier-service\target\dossier-service-0.0.1-SNAPSHOT.jar started by asmab in C:\Users\asmab\MedInsight-Microservices-new\MedInsight-Microservices\dossier-service)
+2025-12-22T17:37:28.686+01:00  INFO 20684 --- [dossier-service] [           main] c.m.dossier.DossierServiceApplication    : No active profile set, falling back to 1 default profile: "default"
+2025-12-22T17:37:40.009+01:00  INFO 20684 --- [dossier-service] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-12-22T17:37:40.764+01:00  INFO 20684 --- [dossier-service] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 688 ms. Found 1 JPA repository interface.
+2025-12-22T17:37:48.883+01:00  INFO 20684 --- [dossier-service] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2025-12-22T17:37:48.967+01:00  INFO 20684 --- [dossier-service] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-12-22T17:37:48.970+01:00  INFO 20684 --- [dossier-service] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.16]
+2025-12-22T17:37:49.431+01:00  INFO 20684 --- [dossier-service] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-12-22T17:37:49.437+01:00  INFO 20684 --- [dossier-service] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 20105 ms
+2025-12-22T17:38:00.433+01:00  INFO 20684 --- [dossier-service] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-12-22T17:38:00.820+01:00  INFO 20684 --- [dossier-service] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.3.1.Final
+2025-12-22T17:38:00.974+01:00  INFO 20684 --- [dossier-service] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-12-22T17:38:02.701+01:00  INFO 20684 --- [dossier-service] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-12-22T17:38:02.900+01:00  INFO 20684 --- [dossier-service] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-12-22T17:38:04.028+01:00  INFO 20684 --- [dossier-service] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@62158991
+2025-12-22T17:38:04.032+01:00  INFO 20684 --- [dossier-service] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-12-22T17:38:04.337+01:00  WARN 20684 --- [dossier-service] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-12-22T17:38:10.376+01:00  INFO 20684 --- [dossier-service] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-12-22T17:38:11.528+01:00  INFO 20684 --- [dossier-service] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-12-22T17:38:16.658+01:00  WARN 20684 --- [dossier-service] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-12-22T17:38:22.058+01:00  INFO 20684 --- [dossier-service] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint(s) beneath base path '/actuator'
+2025-12-22T17:38:23.668+01:00  INFO 20684 --- [dossier-service] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path ''
+2025-12-22T17:38:23.759+01:00  INFO 20684 --- [dossier-service] [           main] c.m.dossier.DossierServiceApplication    : Started DossierServiceApplication in 58.045 seconds (process running for 60.376)
+2025-12-22T17:42:28.441+01:00  INFO 20684 --- [dossier-service] [nio-8080-exec-3] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-12-22T17:42:28.443+01:00  INFO 20684 --- [dossier-service] [nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-12-22T17:42:28.448+01:00  INFO 20684 --- [dossier-service] [nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : Completed initialization in 4 ms

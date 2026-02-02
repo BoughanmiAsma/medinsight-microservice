@@ -29,6 +29,7 @@ public class PrescriptionConsumer {
             p.setConsultationId(jsonNode.path("consultationId").asText());
             p.setMedicationDetails(jsonNode.path("medicationDetails").asText());
             p.setStatus("CREATED");
+            p.setCreatedAt(java.time.LocalDateTime.now());
 
             repo.save(p);
             log.info("Prescription saved: {}", p);

@@ -1,0 +1,8 @@
+com\medinsight\ordonnance\security\UserContext$UserContextBuilder.class
+com\medinsight\ordonnance\OrdonnanceServiceApplication.class
+com\medinsight\ordonnance\web\PrescriptionController.class
+com\medinsight\ordonnance\repository\PrescriptionRepository.class
+com\medinsight\ordonnance\security\UserContext.class
+com\medinsight\ordonnance\event\PrescriptionConsumer.class
+com\medinsight\ordonnance\domain\Prescription.class
+com\medinsight\ordonnance\security\JwtHeaderFilter.class

@@ -1,0 +1,9 @@
+C:\Users\asmab\Desktop\MedInsight-Microservices-new\MedInsight-Microservices\appointment-service\src\main\java\com\medinsight\appointment\AppointmentServiceApplication.java
+C:\Users\asmab\Desktop\MedInsight-Microservices-new\MedInsight-Microservices\appointment-service\src\main\java\com\medinsight\appointment\event\KafkaProducerService.java
+C:\Users\asmab\Desktop\MedInsight-Microservices-new\MedInsight-Microservices\appointment-service\src\main\java\com\medinsight\appointment\repository\AppointmentRepository.java
+C:\Users\asmab\Desktop\MedInsight-Microservices-new\MedInsight-Microservices\appointment-service\src\main\java\com\medinsight\appointment\web\AppointmentController.java
+C:\Users\asmab\Desktop\MedInsight-Microservices-new\MedInsight-Microservices\appointment-service\src\main\java\com\medinsight\appointment\domain\Appointment.java
+C:\Users\asmab\Desktop\MedInsight-Microservices-new\MedInsight-Microservices\appointment-service\src\main\java\com\medinsight\appointment\domain\AppointmentStatus.java
+C:\Users\asmab\Desktop\MedInsight-Microservices-new\MedInsight-Microservices\appointment-service\src\main\java\com\medinsight\appointment\client\StaffClient.java
+C:\Users\asmab\Desktop\MedInsight-Microservices-new\MedInsight-Microservices\appointment-service\src\main\java\com\medinsight\appointment\service\AppointmentService.java
+C:\Users\asmab\Desktop\MedInsight-Microservices-new\MedInsight-Microservices\appointment-service\src\main\java\com\medinsight\appointment\dto\StaffDTO.java

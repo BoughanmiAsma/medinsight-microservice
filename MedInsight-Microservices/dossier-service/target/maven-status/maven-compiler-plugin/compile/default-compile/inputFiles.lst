@@ -1,0 +1,7 @@
+C:\Users\asmab\MedInsight-Microservices-new\MedInsight-Microservices\dossier-service\src\main\java\com\medinsight\dossier\web\DossierController.java
+C:\Users\asmab\MedInsight-Microservices-new\MedInsight-Microservices\dossier-service\src\main\java\com\medinsight\dossier\event\KafkaProducerService.java
+C:\Users\asmab\MedInsight-Microservices-new\MedInsight-Microservices\dossier-service\src\main\java\com\medinsight\dossier\security\JwtHeaderFilter.java
+C:\Users\asmab\MedInsight-Microservices-new\MedInsight-Microservices\dossier-service\src\main\java\com\medinsight\dossier\domain\Dossier.java
+C:\Users\asmab\MedInsight-Microservices-new\MedInsight-Microservices\dossier-service\src\main\java\com\medinsight\dossier\security\UserContext.java
+C:\Users\asmab\MedInsight-Microservices-new\MedInsight-Microservices\dossier-service\src\main\java\com\medinsight\dossier\DossierServiceApplication.java
+C:\Users\asmab\MedInsight-Microservices-new\MedInsight-Microservices\dossier-service\src\main\java\com\medinsight\dossier\repository\DossierRepository.java

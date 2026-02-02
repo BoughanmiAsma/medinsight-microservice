@@ -57,32 +57,29 @@ services:
 
   # ==================== MICROSERVICES ====================
   dossier-service:
-    build:
+    build: 
       context: ./dossier-service
       dockerfile: Dockerfile
     container_name: dossier-service
     ports:
-      - "8083:8080"
+      - "8080:8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/medinsight_platform
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: password
       # Kafka
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      # Keycloak (Using host.docker.internal because Keycloak is in another stack)
+      # Keycloak
       KEYCLOAK_SERVER_URL: http://host.docker.internal:8180
-      # Hyperledger Fabric
-      FABRIC_WALLET_PATH: /app/wallet
-      FABRIC_CONNECTION_PROFILE: /app/connection-doctor.json
-    volumes:
-      - ../fabric-network/connection-doctor.json:/app/connection-doctor.json
-      - ../fabric-network/wallets/doctor/dossierAppUser:/app/wallet
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8180/realms/microservices-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://host.docker.internal:8180/realms/microservices-realm/protocol/openid-connect/certs
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - postgres
       - kafka
     networks:
       - medinsight-net
-      - fabric-net
 
   lab-service:
     build:
@@ -99,12 +96,8 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       # Keycloak
       KEYCLOAK_SERVER_URL: http://host.docker.internal:8180
-      # Hyperledger Fabric
-      FABRIC_WALLET_PATH: /app/wallet
-      FABRIC_CONNECTION_PROFILE: /app/connection-lab.json
-    volumes:
-      - ../fabric-network/connection-lab.json:/app/connection-lab.json
-      - ../fabric-network/wallets/lab/labAppUser:/app/wallet
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8180/realms/microservices-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://host.docker.internal:8180/realms/microservices-realm/protocol/openid-connect/certs
     depends_on:
       - postgres
       - kafka
@@ -126,6 +119,8 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       # Keycloak
       KEYCLOAK_SERVER_URL: http://host.docker.internal:8180
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8180/realms/microservices-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://host.docker.internal:8180/realms/microservices-realm/protocol/openid-connect/certs
     depends_on:
       - postgres
       - kafka
@@ -146,18 +141,62 @@ services:
       SPRING_DATASOURCE_PASSWORD: secret
       # Keycloak
       KEYCLOAK_SERVER_URL: http://host.docker.internal:8180
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8180/realms/microservices-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://host.docker.internal:8180/realms/microservices-realm/protocol/openid-connect/certs
+      # Kafka
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - mysql
+    networks:
+      - medinsight-net
+
+  appointment-service:
+    build:
+      context: ./appointment-service
+      dockerfile: Dockerfile
+    container_name: appointment-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/medinsight_platform
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      # Keycloak
+      KEYCLOAK_SERVER_URL: http://host.docker.internal:8180
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8180/realms/microservices-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://host.docker.internal:8180/realms/microservices-realm/protocol/openid-connect/certs
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - postgres
+      - kafka
+    networks:
+      - medinsight-net
+
+  sonarqube:
+    image: sonarqube:community
+    container_name: medinsight-sonarqube
+    ports:
+      - "9000:9000"
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
     networks:
       - medinsight-net
 
 networks:
   medinsight-net:
     driver: bridge
-  fabric-net:
-    external: true
-    name: fabric-net
 
 volumes:
   postgres-data:
   mysql-data:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:

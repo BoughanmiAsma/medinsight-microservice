@@ -1,0 +1,8 @@
+com\medinsight\dossier\domain\Dossier.class
+com\medinsight\dossier\event\KafkaProducerService.class
+com\medinsight\dossier\security\UserContext$UserContextBuilder.class
+com\medinsight\dossier\repository\DossierRepository.class
+com\medinsight\dossier\web\DossierController.class
+com\medinsight\dossier\security\UserContext.class
+com\medinsight\dossier\DossierServiceApplication.class
+com\medinsight\dossier\security\JwtHeaderFilter.class
