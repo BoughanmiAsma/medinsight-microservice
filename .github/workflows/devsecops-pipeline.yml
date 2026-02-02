@@ -6,6 +6,9 @@ on:
       - main
       - feature/DevSecOps
       - feature/deploy
+      - feature/deploy2
+      - feature/rapport-upload
+      - feature/k8s
   pull_request:
     branches:
       - main
@@ -217,9 +220,11 @@ jobs:
             
             # Clone ou Pull du repo pour avoir les fichiers YAML à jour
             if [ -d ".git" ]; then
-              git pull origin feature/DevSecOps
+              git fetch origin
+              git checkout ${{ github.ref_name }}
+              git pull origin ${{ github.ref_name }}
             else
-              git clone -b feature/DevSecOps https://github.com/BoughanmiAsma/medinsight-microservice.git .
+              git clone -b ${{ github.ref_name }} https://github.com/BoughanmiAsma/medinsight-microservice.git .
             fi
             
             MANIFEST_PATH="k8s/${{ env.K8S_DIR }}/${{ env.K8S_DIR }}.yml"
