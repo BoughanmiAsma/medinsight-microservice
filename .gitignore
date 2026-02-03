@@ -1,3 +1,26 @@
+# Binaries
+fabric-network/bin/
+**/*.exe
+**/*.dll
+
+# Dependencies
+**/vendor/
+node_modules/
+**/target/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Logs
+*.log
+
+# Temp files
+*.tmp
+
+
+
 add_jwt_v2.py
 add_jwt.py
 check-issuer.ps1

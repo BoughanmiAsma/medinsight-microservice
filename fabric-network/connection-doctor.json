@@ -4,41 +4,120 @@
     "client": {
         "organization": "doctor"
     },
+    "channels": {
+        "recordschannel": {
+            "orderers": [
+                "orderer.medinsight.com"
+            ],
+            "peers": {
+                "peer0.doctor.medinsight.com": {
+                    "discover": false,
+                    "endorsingPeer": true,
+                    "chaincodeQuery": true,
+                    "ledgerQuery": true
+                },
+                "peer0.pharmacy.medinsight.com": {
+                    "discover": false,
+                    "endorsingPeer": true,
+                    "chaincodeQuery": true,
+                    "ledgerQuery": true
+                },
+                "peer0.lab.medinsight.com": {
+                    "discover": false,
+                    "endorsingPeer": true,
+                    "chaincodeQuery": true,
+                    "ledgerQuery": true
+                },
+                "peer0.patient.medinsight.com": {
+                    "discover": false,
+                    "endorsingPeer": true,
+                    "chaincodeQuery": true,
+                    "ledgerQuery": true
+                }
+            }
+        },
+        "prescriptionschannel": {
+            "orderers": [
+                "orderer.medinsight.com"
+            ],
+            "peers": {
+                "peer0.doctor.medinsight.com": {
+                    "discover": false,
+                    "endorsingPeer": true,
+                    "chaincodeQuery": true,
+                    "ledgerQuery": true
+                },
+                "peer0.pharmacy.medinsight.com": {
+                    "discover": false,
+                    "endorsingPeer": true,
+                    "chaincodeQuery": true,
+                    "ledgerQuery": true
+                }
+            }
+        },
+        "consentchannel": {
+            "orderers": [
+                "orderer.medinsight.com"
+            ],
+            "peers": {
+                "peer0.doctor.medinsight.com": {
+                    "discover": false,
+                    "endorsingPeer": true,
+                    "chaincodeQuery": true,
+                    "ledgerQuery": true
+                },
+                "peer0.patient.medinsight.com": {
+                    "discover": false,
+                    "endorsingPeer": true,
+                    "chaincodeQuery": true,
+                    "ledgerQuery": true
+                }
+            }
+        }
+    },
     "organizations": {
         "doctor": {
             "mspid": "DoctorOrgMSP",
             "peers": [
                 "peer0.doctor.medinsight.com"
-            ],
-            "certificateAuthorities": [
-                "ca.doctor.medinsight.com"
             ]
+        },
+        "pharmacy": {
+            "mspid": "PharmacyOrgMSP",
+            "peers": [
+                "peer0.pharmacy.medinsight.com"
+            ]
+        },
+        "lab": {
+            "mspid": "LabOrgMSP",
+            "peers": [
+                "peer0.lab.medinsight.com"
+            ]
+        },
+        "patient": {
+            "mspid": "PatientOrgMSP",
+            "peers": [
+                "peer0.patient.medinsight.com"
+            ]
+        }
+    },
+    "orderers": {
+        "orderer.medinsight.com": {
+            "url": "grpc://orderer.medinsight.com:7050"
         }
     },
     "peers": {
         "peer0.doctor.medinsight.com": {
-            "url": "grpcs://localhost:7051",
-            "tlsCACerts": {
-                "pem": "-----BEGIN CERTIFICATE-----\nMIICbDCCAhOgAwIBAgIQJFQhBZDzb0fGo63OwrB8uTAKBggqhkjOPQQDAjCBgDEL\nMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG\ncmFuY2lzY28xHjAcBgNVBAoTFWRvY3Rvci5tZWRpbnNpZ2h0LmNvbTEkMCIGA1UE\nAxMbdGxzY2EuZG9jdG9yLm1lZGluc2lnaHQuY29tMB4XDTI1MTIzMDIxMDMwMFoX\nDTM1MTIyODIxMDMwMFowgYAxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9y\nbmlhMRYwFAYDVQQHEw1TYW4gRnJhbmNpc2NvMR4wHAYDVQQKExVkb2N0b3IubWVk\naW5zaWdodC5jb20xJDAiBgNVBAMTG3Rsc2NhLmRvY3Rvci5tZWRpbnNpZ2h0LmNv\nbTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABA6+jBeIh+GA8d8piY0lXQUmGtSA\nLWL+VEIgvx5+z9SnWrhj5mq3cE5UH+S8TyOVBA73jyL/30jga2ybKeA2PGSjbTBr\nMA4GA1UdDwEB/wQEAwIBpjAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwEw\nDwYDVR0TAQH/BAUwAwEB/zApBgNVHQ4EIgQgKpO3a0XVeAjB8B6Fh4HuEaCydqip\ntEUREXVOz5UNj5EwCgYIKoZIzj0EAwIDRwAwRAIgUUT4xVkfA7KuFYT3GFeBql3O\nDG19UgSfAwE5eALc72wCIEA8isOAqayMNyvbJerSbpyq2P8FP6n+RXV0puvsxKM/\n-----END CERTIFICATE-----\n"
-            },
-            "grpcOptions": {
-                "ssl-target-name-override": "peer0.doctor.medinsight.com",
-                "hostnameOverride": "peer0.doctor.medinsight.com"
-            }
-        }
-    },
-    "certificateAuthorities": {
-        "ca.doctor.medinsight.com": {
-            "url": "https://localhost:7054",
-            "caName": "ca.doctor.medinsight.com",
-            "tlsCACerts": {
-                "pem": [
-                    "-----BEGIN CERTIFICATE-----\nMIICZDCCAgugAwIBAgIQblRzMzhYUFQFk8esKrzILDAKBggqhkjOPQQDAjB9MQsw\nCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZy\nYW5jaXNjbzEeMBwGA1UEChMVZG9jdG9yLm1lZGluc2lnaHQuY29tMSEwHwYDVQQD\nExhjYS5kb2N0b3IubWVkaW5zaWdodC5jb20wHhcNMjUxMjMwMjEwMzAwWhcNMzUx\nMjI4MjEwMzAwWjB9MQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEW\nMBQGA1UEBxMNU2FuIEZyYW5jaXNjbzEeMBwGA1UEChMVZG9jdG9yLm1lZGluc2ln\naHQuY29tMSEwHwYDVQQDExhjYS5kb2N0b3IubWVkaW5zaWdodC5jb20wWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAARftKtt3GNkR3O/PUjxEVZrlRG1lKALjE5g/uEW\nG6B8+A0feuDvstN1V4jW7nvvaZan8NwLaLmgztysF9t+83ouo20wazAOBgNVHQ8B\nAf8EBAMCAaYwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMBMA8GA1UdEwEB\n/wQFMAMBAf8wKQYDVR0OBCIEIGznMKQi5PBreHaR24lYHianmGGmgfCduMmu+sWD\nWtWlMAoGCCqGSM49BAMCA0cAMEQCIDH8XN3vIvN1dDX0XsZf349chXMWGwy9jydW\n6+DlWWajAiA2mM0byfNDX2b3/TNE7njR0nE7ei3eKOHstyYM5simlg==\n-----END CERTIFICATE-----\n"
-                ]
-            },
-            "httpOptions": {
-                "verify": false
-            }
+            "url": "grpc://peer0.doctor.medinsight.com:7051"
+        },
+        "peer0.pharmacy.medinsight.com": {
+            "url": "grpc://peer0.pharmacy.medinsight.com:9051"
+        },
+        "peer0.lab.medinsight.com": {
+            "url": "grpc://peer0.lab.medinsight.com:11051"
+        },
+        "peer0.patient.medinsight.com": {
+            "url": "grpc://peer0.patient.medinsight.com:13051"
         }
     }
 }

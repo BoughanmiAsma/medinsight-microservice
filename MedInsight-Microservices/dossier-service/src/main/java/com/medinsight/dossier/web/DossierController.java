@@ -27,6 +27,7 @@ public class DossierController {
     private final ConsultationRepository consultationRepository;
     private final AnalysisEntryRepository analysisEntryRepository;
     private final KafkaProducerService producerService;
+    private final com.medinsight.dossier.service.BlockchainService blockchainService;
 
     @GetMapping
     public ResponseEntity<?> getAll() {
@@ -100,6 +101,8 @@ public class DossierController {
     @PostMapping("/{dossierId}/consultations")
     public ResponseEntity<?> createConsultation(@PathVariable String dossierId,
             @RequestBody Consultation consultation) {
+        System.out.println("DEBUG: User " + UserContext.getCurrent().getUsername() + " roles: "
+                + UserContext.getCurrent().getRoles());
         if (!UserContext.getCurrent().hasAnyRole("dossier:write", "ROLE_MEDECIN")) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("Access Denied: Required role dossier:write or MEDECIN");
@@ -109,7 +112,14 @@ public class DossierController {
         if (consultation.getConsultationDate() == null) {
             consultation.setConsultationDate(LocalDateTime.now());
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(consultationRepository.save(consultation));
+        // Blockchain ONLY storage
+        boolean success = blockchainService.recordConsultation(consultation);
+        if (!success) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to record consultation on blockchain. Check service logs.");
+        }
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(consultation);
     }
 
     @GetMapping("/{dossierId}/consultations")
@@ -118,6 +128,7 @@ public class DossierController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("Access Denied: Required role dossier:read or Medical Staff");
         }
-        return ResponseEntity.ok(consultationRepository.findByDossierId(dossierId));
+        // Fetch from Blockchain
+        return ResponseEntity.ok(blockchainService.getConsultations(dossierId));
     }
 }

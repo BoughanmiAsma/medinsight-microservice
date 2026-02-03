@@ -1,8 +1,14 @@
 com\medinsight\lab\event\LabOrderConsumer.class
+com\medinsight\lab\domain\AnalysisReport.class
+com\medinsight\lab\security\UserContext$UserContextBuilder.class
+com\medinsight\lab\event\KafkaProducerService.class
+com\medinsight\lab\repository\AnalysisReportRepository.class
+com\medinsight\lab\security\UserContext.class
 com\medinsight\lab\domain\LabOrder.class
 com\medinsight\lab\LabServiceApplication.class
-com\medinsight\lab\security\UserContext$UserContextBuilder.class
+com\medinsight\lab\service\FileStorageService.class
 com\medinsight\lab\security\JwtHeaderFilter.class
+com\medinsight\lab\web\AnalysisUploadController.class
+com\medinsight\lab\security\SecurityConfig.class
 com\medinsight\lab\repository\LabOrderRepository.class
 com\medinsight\lab\web\LabOrderController.class
-com\medinsight\lab\security\UserContext.class

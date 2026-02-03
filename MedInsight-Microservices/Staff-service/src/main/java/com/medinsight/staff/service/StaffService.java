@@ -2,6 +2,7 @@ package com.medinsight.staff.service;
 
 import com.medinsight.staff.dto.StaffDTO;
 import com.medinsight.staff.entities.Staff;
+import com.medinsight.staff.entities.StaffType;
 import com.medinsight.staff.exception.ResourceNotFoundException;
 import com.medinsight.staff.repository.StaffRepository;
 import lombok.RequiredArgsConstructor;

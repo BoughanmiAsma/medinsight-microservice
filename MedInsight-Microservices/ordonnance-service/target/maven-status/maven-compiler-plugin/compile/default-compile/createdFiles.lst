@@ -1,5 +1,6 @@
 com\medinsight\ordonnance\security\UserContext$UserContextBuilder.class
 com\medinsight\ordonnance\OrdonnanceServiceApplication.class
+com\medinsight\ordonnance\security\SecurityConfig.class
 com\medinsight\ordonnance\web\PrescriptionController.class
 com\medinsight\ordonnance\repository\PrescriptionRepository.class
 com\medinsight\ordonnance\security\UserContext.class

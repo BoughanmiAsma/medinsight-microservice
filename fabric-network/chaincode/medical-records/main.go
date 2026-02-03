@@ -59,6 +59,12 @@ func (c *MedicalRecordsContract) CreateRecord(ctx contractapi.TransactionContext
 		}
 	}
 
+	txTimestamp, err := ctx.GetStub().GetTxTimestamp()
+	if err != nil {
+		return fmt.Errorf("failed to get transaction timestamp: %v", err)
+	}
+	now := time.Unix(txTimestamp.Seconds, int64(txTimestamp.Nanos))
+
 	record := MedicalRecord{
 		RecordID:    recordID,
 		PatientID:   patientID,
@@ -68,8 +74,8 @@ func (c *MedicalRecordsContract) CreateRecord(ctx contractapi.TransactionContext
 		Medications: meds,
 		LabResults:  labResults,
 		Notes:       notes,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		CreatedAt:   now,
+		UpdatedAt:   now,
 		CreatedBy:   mspID,
 	}
 
@@ -118,6 +124,12 @@ func (c *MedicalRecordsContract) UpdateRecord(ctx contractapi.TransactionContext
 		return err
 	}
 
+	txTimestamp, err := ctx.GetStub().GetTxTimestamp()
+	if err != nil {
+		return fmt.Errorf("failed to get transaction timestamp: %v", err)
+	}
+	now := time.Unix(txTimestamp.Seconds, int64(txTimestamp.Nanos))
+
 	// Update fields
 	if diagnosis != "" {
 		record.Diagnosis = diagnosis
@@ -139,7 +151,7 @@ func (c *MedicalRecordsContract) UpdateRecord(ctx contractapi.TransactionContext
 	if notes != "" {
 		record.Notes = notes
 	}
-	record.UpdatedAt = time.Now()
+	record.UpdatedAt = now
 
 	recordJSON, err := json.Marshal(record)
 	if err != nil {

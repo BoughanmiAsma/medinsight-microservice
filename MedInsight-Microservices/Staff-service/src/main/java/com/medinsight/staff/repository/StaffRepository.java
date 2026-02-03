@@ -15,4 +15,7 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
     List<Staff> findByType(StaffType type);
 
     List<Staff> findByActif(Boolean actif);
+
+    List<Staff> findByNumeroLicence(String numeroLicence);
+
 }
