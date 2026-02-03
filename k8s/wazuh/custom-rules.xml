@@ -1,0 +1,123 @@
+<!-- Custom Wazuh Rules for MedInsight Microservices -->
+<!-- File: /var/ossec/etc/rules/local_rules.xml -->
+
+<group name="medinsight,">
+
+  <!-- Rule 100100: Successful authentication via Keycloak -->
+  <rule id="100100" level="3">
+    <if_sid>5715</if_sid>
+    <match>keycloak</match>
+    <description>MedInsight: Successful user authentication via Keycloak</description>
+    <group>authentication_success,pci_dss_10.2.5,gdpr_IV_35.7.d,hipaa_164.312.b,</group>
+  </rule>
+
+  <!-- Rule 100101: Failed authentication attempts -->
+  <rule id="100101" level="5">
+    <if_sid>5716</if_sid>
+    <match>keycloak|authentication failed</match>
+    <description>MedInsight: Failed authentication attempt detected</description>
+    <group>authentication_failed,pci_dss_10.2.4,pci_dss_10.2.5,gdpr_IV_35.7.d,hipaa_164.312.b,</group>
+  </rule>
+
+  <!-- Rule 100102: Multiple failed authentication attempts (Brute Force) -->
+  <rule id="100102" level="10" frequency="5" timeframe="120">
+    <if_matched_sid>100101</if_matched_sid>
+    <same_source_ip />
+    <description>MedInsight: Multiple failed authentication attempts from same IP - Possible brute force attack</description>
+    <group>authentication_failures,pci_dss_11.4,gdpr_IV_35.7.d,hipaa_164.312.b,</group>
+  </rule>
+
+  <!-- Rule 100103: Unauthorized access to patient records -->
+  <rule id="100103" level="12">
+    <match>dossier-service|unauthorized|403|access denied</match>
+    <description>MedInsight: Unauthorized access attempt to patient records (Dossier Service)</description>
+    <group>access_denied,hipaa_164.308.a.1.ii.D,hipaa_164.312.a.1,gdpr_IV_32,pci_dss_10.2.4,</group>
+  </rule>
+
+  <!-- Rule 100104: Prescription modification detected -->
+  <rule id="100104" level="8">
+    <match>ordonnance-service|prescription|UPDATE|modified</match>
+    <description>MedInsight: Prescription modification detected (Ordonnance Service)</description>
+    <group>data_modification,hipaa_164.312.c.1,gdpr_IV_32,pci_dss_10.2.5,</group>
+  </rule>
+
+  <!-- Rule 100105: Laboratory results access -->
+  <rule id="100105" level="6">
+    <match>laboratoire-service|lab results|accessed</match>
+    <description>MedInsight: Laboratory results accessed (Laboratoire Service)</description>
+    <group>hipaa_164.312.b,gdpr_IV_32,pci_dss_10.2.2,</group>
+  </rule>
+
+  <!-- Rule 100106: Appointment cancellation -->
+  <rule id="100106" level="5">
+    <match>appointment-service|cancelled|DELETE</match>
+    <description>MedInsight: Appointment cancelled (Appointment Service)</description>
+    <group>data_modification,hipaa_164.312.c.1,</group>
+  </rule>
+
+  <!-- Rule 100107: Staff privilege escalation attempt -->
+  <rule id="100107" level="12">
+    <match>staff-service|role change|privilege escalation|admin</match>
+    <description>MedInsight: Staff privilege escalation attempt detected</description>
+    <group>privilege_escalation,pci_dss_10.2.2,gdpr_IV_32,hipaa_164.312.a.2.I,</group>
+  </rule>
+
+  <!-- Rule 100108: Kong API Gateway - Rate limit exceeded -->
+  <rule id="100108" level="7">
+    <match>kong|rate limit exceeded|429</match>
+    <description>MedInsight: API rate limit exceeded - Possible DDoS attempt</description>
+    <group>web,pci_dss_11.4,</group>
+  </rule>
+
+  <!-- Rule 100109: SQL Injection attempt detected -->
+  <rule id="100109" level="15">
+    <match>SELECT.*FROM|UNION.*SELECT|DROP.*TABLE|' OR '1'='1</match>
+    <description>MedInsight: SQL Injection attempt detected</description>
+    <group>sql_injection,attack,pci_dss_6.5.1,gdpr_IV_32,hipaa_164.312.b,</group>
+  </rule>
+
+  <!-- Rule 100110: Suspicious API endpoint access pattern -->
+  <rule id="100110" level="10" frequency="10" timeframe="60">
+    <match>/api/</match>
+    <same_source_ip />
+    <description>MedInsight: Suspicious API access pattern - Multiple endpoints in short time</description>
+    <group>web,reconnaissance,pci_dss_11.4,</group>
+  </rule>
+
+  <!-- Rule 100111: Database connection failure -->
+  <rule id="100111" level="8">
+    <match>database connection failed|mysql|connection refused</match>
+    <description>MedInsight: Database connection failure detected</description>
+    <group>service_availability,</group>
+  </rule>
+
+  <!-- Rule 100112: Kafka messaging errors -->
+  <rule id="100112" level="6">
+    <match>kafka|message broker|connection error</match>
+    <description>MedInsight: Kafka messaging error detected</description>
+    <group>service_availability,</group>
+  </rule>
+
+  <!-- Rule 100113: Sensitive data exposure -->
+  <rule id="100113" level="15">
+    <match>password|secret|api_key|bearer token</match>
+    <regex>password[\s]*:[\s]*\S+|api[_-]?key[\s]*:[\s]*\S+</regex>
+    <description>MedInsight: Potential sensitive data exposure in logs</description>
+    <group>data_leak,pci_dss_3.4,gdpr_IV_32,hipaa_164.312.a.2.IV,</group>
+  </rule>
+
+  <!-- Rule 100114: Container restart detected -->
+  <rule id="100114" level="7">
+    <match>container|restart|crash|pod</match>
+    <description>MedInsight: Container/Pod restart detected - Possible stability issue</description>
+    <group>availability,</group>
+  </rule>
+
+  <!-- Rule 100115: High memory/CPU usage -->
+  <rule id="100115" level="8">
+    <match>OutOfMemoryError|memory limit exceeded|CPU usage high</match>
+    <description>MedInsight: Resource exhaustion detected</description>
+    <group>resource_exhaustion,</group>
+  </rule>
+
+</group>

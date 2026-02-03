@@ -1,7 +1,7 @@
 package com.medinsight.staff.controllers;
 
-import com.medinsight.staff.DTO.StaffDTO;
-import com.medinsight.staff.services.Staffservice;
+import com.medinsight.staff.dto.StaffDTO;
+import com.medinsight.staff.service.StaffService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +20,7 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class StaffController {
     @Autowired
-    private final Staffservice staffService;
+    private final StaffService staffService;
 
     // POST: Créer un nouveau staff
     @PostMapping

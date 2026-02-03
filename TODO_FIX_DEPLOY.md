@@ -51,3 +51,20 @@ N'oubliez pas de **décommenter** les étapes de déploiement dans le pipeline :
   run: |
   ...
 ```
+
+---
+
+## 🛡️ Configuration Wazuh (Monitoring de Sécurité)
+
+Pour que les agents Wazuh dans Kubernetes puissent communiquer avec le Wazuh Manager :
+
+1. Aller dans **EC2 > Security Groups**
+2. Modifier le Security Group du **Master Node**
+3. Ajouter une règle **Inbound** :
+   - **Type** : Custom TCP
+   - **Port** : `1514`
+   - **Source** : Security Group des Worker Nodes (ou CIDR du VPC interne)
+   - **Description** : Wazuh Agent Communication
+
+> **Note** : Le port 1514 permet aux agents Kubernetes de se connecter au Wazuh Manager pour la surveillance de sécurité.
+

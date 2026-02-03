@@ -1,6 +1,6 @@
 package com.medinsight.staff.dto;
 
-import com.medinsight.staff.domain.StaffType;
+import com.medinsight.staff.entities.StaffType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

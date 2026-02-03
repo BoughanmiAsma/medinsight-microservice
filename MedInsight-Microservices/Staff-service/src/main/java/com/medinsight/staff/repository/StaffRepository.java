@@ -1,7 +1,7 @@
 package com.medinsight.staff.repository;
 
-import com.medinsight.staff.domain.Staff;
-import com.medinsight.staff.domain.StaffType;
+import com.medinsight.staff.entities.Staff;
+import com.medinsight.staff.entities.StaffType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -57,7 +57,7 @@ services:
 
   # ==================== MICROSERVICES ====================
   dossier-service:
-    build: 
+    build:
       context: ./dossier-service
       dockerfile: Dockerfile
     container_name: dossier-service
@@ -98,11 +98,18 @@ services:
       KEYCLOAK_SERVER_URL: http://host.docker.internal:8180
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8180/realms/microservices-realm
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://host.docker.internal:8180/realms/microservices-realm/protocol/openid-connect/certs
+      # Hyperledger Fabric
+      FABRIC_WALLET_PATH: /app/wallet
+      FABRIC_CONNECTION_PROFILE: /app/connection-doctor.json
+    volumes:
+      - ../fabric-network/connection-doctor.json:/app/connection-doctor.json
+      - ../fabric-network/wallets/doctor/dossierAppUser:/app/wallet
     depends_on:
       - postgres
       - kafka
     networks:
       - medinsight-net
+      - fabric-net
 
   ordonnance-service:
     build:
