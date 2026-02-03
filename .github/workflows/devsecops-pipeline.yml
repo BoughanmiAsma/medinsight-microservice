@@ -7,8 +7,7 @@ on:
       - feature/DevSecOps
       - feature/deploy
       - feature/deploy2
-      - feature/rapport-upload
-      - feature/k8s
+      - feature/deploy3
   pull_request:
     branches:
       - main
