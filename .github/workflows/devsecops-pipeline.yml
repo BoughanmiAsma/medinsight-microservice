@@ -4,9 +4,6 @@ on:
   push:
     branches: 
       - main
-      - feature/DevSecOps
-      - feature/deploy
-      - feature/deploy2
       - feature/deploy3
   pull_request:
     branches:
@@ -244,8 +241,10 @@ jobs:
             
             if [ -d ".git" ]; then
               git fetch origin
-              git checkout ${{ github.ref_name }}
-              git pull origin ${{ github.ref_name }}
+              git reset --hard HEAD
+              git clean -fd
+              git checkout ${{ github.ref_name }} || git checkout -b ${{ github.ref_name }} origin/${{ github.ref_name }}
+              git reset --hard origin/${{ github.ref_name }}
             else
               git clone -b ${{ github.ref_name }} https://github.com/BoughanmiAsma/medinsight-microservice.git .
             fi
