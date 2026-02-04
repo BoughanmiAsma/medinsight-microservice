@@ -252,7 +252,18 @@ jobs:
             MANIFEST_PATH="k8s/${{ env.K8S_DIR }}/${{ env.K8S_DIR }}.yml"
             kubectl set image deployment/${{ env.K8S_DIR }} ${{ env.K8S_DIR }}=${{ env.IMAGE_TAG }} -n ${{ env.NAMESPACE }} || true
             kubectl apply -f $MANIFEST_PATH -n ${{ env.NAMESPACE }}
-            kubectl rollout status deployment/${{ env.K8S_DIR }} -n ${{ env.NAMESPACE }}
+            
+            # Wait for rollout with extended timeout (5 minutes)
+            if ! kubectl rollout status deployment/${{ env.K8S_DIR }} -n ${{ env.NAMESPACE }} --timeout=300s; then
+              echo "=== Deployment failed, showing diagnostics ==="
+              echo "=== Pod Status ==="
+              kubectl get pods -l app=${{ env.K8S_DIR }} -n ${{ env.NAMESPACE }}
+              echo "=== Pod Events ==="
+              kubectl describe pods -l app=${{ env.K8S_DIR }} -n ${{ env.NAMESPACE }} | tail -50
+              echo "=== Pod Logs ==="
+              kubectl logs -l app=${{ env.K8S_DIR }} -n ${{ env.NAMESPACE }} --tail=100 || true
+              exit 1
+            fi
 
   # ==================== PHASE 5: DAST (Dynamic Testing) ====================
   dast-security-scan:
