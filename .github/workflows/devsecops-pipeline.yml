@@ -99,11 +99,11 @@ jobs:
       fail-fast: false
       matrix:
         service_path:
-          - MedInsight-Microservices/dossier-service
           - MedInsight-Microservices/lab-service
           - MedInsight-Microservices/ordonnance-service
-          - MedInsight-Microservices/Staff-service
           - MedInsight-Microservices/appointment-service
+          - MedInsight-Microservices/dossier-service
+          - MedInsight-Microservices/Staff-service
 
     services:
       sonarqube:
