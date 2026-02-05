@@ -39,6 +39,7 @@ public class DossierController {
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody Dossier dossier) {
+        System.out.println("DEBUG: Received Dossier with poids: " + dossier.getPoids());
         if (!UserContext.getCurrent().hasAnyRole("dossier:write", "ROLE_MEDECIN", "ROLE_SECRETAIRE")) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("Access Denied: Required role dossier:write or Medical Staff");

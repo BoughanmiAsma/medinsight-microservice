@@ -29,19 +29,19 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> {
-                })
+                .cors(cors -> {})
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
-                        .anyRequest().authenticated())
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
 
-        http.addFilterAfter(jwtHeaderFilter, UsernamePasswordAuthenticationFilter.class);
+        // http.addFilterAfter(jwtHeaderFilter, UsernamePasswordAuthenticationFilter.class); // Temporarily disabled
 
         return http.build();
+    }
+
+    @Bean
+    public org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring().requestMatchers("/staffs/keycloak/**", "/staffs/public/test");
     }
 
     @Bean

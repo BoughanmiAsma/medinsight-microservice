@@ -29,6 +29,7 @@ public class Dossier {
     private String adresse;
     private String numeroSecuriteSociale;
     private String groupeSanguin;
+    private Double poids;
 
     @ElementCollection
     private List<String> allergies;

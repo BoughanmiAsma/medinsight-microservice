@@ -14,11 +14,12 @@ public class Appointment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long doctorId;
+    private String doctorId;
     private String patientId;
     private LocalDateTime appointmentDate;
 
     @Enumerated(EnumType.STRING)
     private AppointmentStatus status;
+    private String motif;
     private String notes;
 }

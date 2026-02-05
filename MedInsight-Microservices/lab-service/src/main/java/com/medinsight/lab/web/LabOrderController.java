@@ -18,10 +18,13 @@ public class LabOrderController {
     private final LabOrderRepository repo;
 
     @GetMapping
-    public ResponseEntity<?> getAll() {
+    public ResponseEntity<?> getAll(@RequestParam(required = false) String dossierId) {
         if (!UserContext.getCurrent().hasAnyRole("lab:read", "ROLE_MEDECIN", "ROLE_INFIRMIER", "ROLE_LABORATOIRE")) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("Access Denied: Required role lab:read or Medical Staff");
+        }
+        if (dossierId != null) {
+            return ResponseEntity.ok(repo.findByDossierId(dossierId));
         }
         return ResponseEntity.ok(repo.findAll());
     }

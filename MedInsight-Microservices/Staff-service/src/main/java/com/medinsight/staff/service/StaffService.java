@@ -24,6 +24,7 @@ public class StaffService {
     private StaffDTO toDTO(Staff staff) {
         return StaffDTO.builder()
                 .id(staff.getId())
+                .keycloakId(staff.getKeycloakId())
                 .nom(staff.getNom())
                 .prenom(staff.getPrenom())
                 .email(staff.getEmail())
@@ -41,6 +42,7 @@ public class StaffService {
     private Staff toEntity(StaffDTO dto) {
         return Staff.builder()
                 .id(dto.getId())
+                .keycloakId(dto.getKeycloakId())
                 .nom(dto.getNom())
                 .prenom(dto.getPrenom())
                 .email(dto.getEmail())
@@ -76,11 +78,14 @@ public class StaffService {
             case TECHNICIEN -> roleKeycloak = "ROLE_TECHNICIEN";
             case AIDE_SOIGNANT -> roleKeycloak = "ROLE_AIDE_SOIGNANT";
             case LABORATOIRE -> roleKeycloak = "ROLE_LABORATOIRE";
-            case PHARMACIE -> roleKeycloak = "ROLE_PHARMACIEN";
+            case PHARMACIE -> roleKeycloak = "ROLE_PHARMACIE";
             default -> throw new IllegalArgumentException("Type de staff inconnu");
         }
 
         keycloakUserService.assignRealmRoleToUser(kcId, roleKeycloak);
+        
+        // Envoyer l'email de réinitialisation de mot de passe
+        keycloakUserService.sendResetPasswordEmail(kcId);
 
         savedStaff.setKeycloakId(kcId);
         staffRepository.save(savedStaff);
@@ -128,6 +133,9 @@ public class StaffService {
                                                        // field
         staff.setNumeroLicence(staffDTO.getNumeroLicence());
         staff.setActif(staffDTO.getActif());
+        if (staffDTO.getKeycloakId() != null) {
+            staff.setKeycloakId(staffDTO.getKeycloakId());
+        }
 
         Staff updatedStaff = staffRepository.save(staff);
         log.info("Staff modifié avec succès: {}", updatedStaff.getId());
@@ -155,6 +163,15 @@ public class StaffService {
 
         staffRepository.delete(staff);
         log.info("Staff supprimé avec succès: {}", id);
+    }
+
+    @Transactional(readOnly = true)
+    public StaffDTO getStaffByKeycloakId(String keycloakId) {
+        log.info("Récupération du staff avec Keycloak ID: {}", keycloakId);
+        Staff staff = staffRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Staff non trouvé avec le Keycloak ID: " + keycloakId));
+        return toDTO(staff);
     }
 
     @Transactional(readOnly = true)

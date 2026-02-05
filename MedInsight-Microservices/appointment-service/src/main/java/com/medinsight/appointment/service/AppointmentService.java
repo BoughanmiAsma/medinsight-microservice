@@ -20,10 +20,20 @@ public class AppointmentService {
     private final StaffClient staffClient;
 
     public Appointment createAppointment(Appointment appointment) {
-        // Validate doctor exists in Staff-service
-        StaffDTO doctor = staffClient.getStaffById(appointment.getDoctorId());
-        if (doctor == null) {
-            throw new RuntimeException("Doctor not found with ID: " + appointment.getDoctorId());
+        System.out.println("Tentative de création de rendez-vous pour le docteur ID: " + appointment.getDoctorId());
+        // Validate doctor exists in Staff-service using Keycloak ID
+        try {
+            StaffDTO doctor = staffClient.getStaffByKeycloakId(appointment.getDoctorId());
+            if (doctor == null) {
+                String error = "Le médecin avec l'ID " + appointment.getDoctorId() + " n'existe pas dans la table staff.";
+                System.err.println(error);
+                throw new RuntimeException(error);
+            }
+            System.out.println("Docteur validé: " + doctor.getNom());
+        } catch (Exception e) {
+            String error = "Erreur de validation du médecin (ID: " + appointment.getDoctorId() + ") : " + e.getMessage();
+            System.err.println(error);
+            throw new RuntimeException(error);
         }
 
         appointment.setStatus(AppointmentStatus.PENDING);
@@ -35,11 +45,29 @@ public class AppointmentService {
         return saved;
     }
 
-    public List<Appointment> getAppointmentsByDoctor(Long doctorId) {
+    public List<Appointment> getAppointmentsByDoctor(String doctorId) {
         return repository.findByDoctorId(doctorId);
     }
 
     public List<Appointment> getAppointmentsByPatient(String patientId) {
         return repository.findByPatientId(patientId);
+    }
+
+    public Appointment updateAppointmentStatus(Long id, String statusStr) {
+        Appointment appointment = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé"));
+        
+        AppointmentStatus status = AppointmentStatus.valueOf(statusStr.toUpperCase());
+        appointment.setStatus(status);
+        Appointment updated = repository.save(appointment);
+        
+        // Notify via Kafka
+        kafkaProducerService.sendAppointmentEvent("appointment.status.updated", updated);
+        
+        return updated;
+    }
+
+    public List<Appointment> getAllAppointments() {
+        return repository.findAll();
     }
 }

@@ -64,6 +64,21 @@ public class JwtHeaderFilter extends OncePerRequestFilter {
             roles.addAll(realmRoles);
         }
 
+        // Extract Client Roles (resource_access)
+        Map<String, Object> resourceAccess = jwt.getClaimAsMap("resource_access");
+        if (resourceAccess != null) {
+            for (Object client : resourceAccess.values()) {
+                if (client instanceof Map) {
+                    Map<?, ?> clientMap = (Map<?, ?>) client;
+                    if (clientMap.get("roles") instanceof List) {
+                        @SuppressWarnings("unchecked")
+                        List<String> clientRoles = (List<String>) clientMap.get("roles");
+                        roles.addAll(clientRoles);
+                    }
+                }
+            }
+        }
+
         return UserContext.builder()
                 .userId(jwt.getSubject())
                 .username(jwt.getClaimAsString("preferred_username"))

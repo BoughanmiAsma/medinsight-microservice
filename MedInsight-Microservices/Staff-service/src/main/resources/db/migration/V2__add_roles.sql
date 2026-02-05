@@ -1,0 +1,4 @@
+-- V2__add_roles.sql
+-- Ajout des rôles LABORATOIRE et PHARMACIE à l'ENUM type de la table staff
+
+ALTER TABLE staff MODIFY COLUMN type ENUM('MEDECIN', 'SECRETAIRE', 'INFIRMIER', 'TECHNICIEN', 'AIDE_SOIGNANT', 'LABORATOIRE', 'PHARMACIE') NOT NULL;

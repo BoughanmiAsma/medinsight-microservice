@@ -64,6 +64,21 @@ public class JwtHeaderFilter extends OncePerRequestFilter {
             roles.addAll(realmRoles);
         }
 
+        // Extract Client Roles (resource_access)
+        Map<String, Object> resourceAccess = jwt.getClaimAsMap("resource_access");
+        if (resourceAccess != null) {
+            for (Object client : resourceAccess.values()) {
+                if (client instanceof Map) {
+                    Map<?, ?> clientMap = (Map<?, ?>) client;
+                    if (clientMap.get("roles") instanceof List) {
+                        @SuppressWarnings("unchecked")
+                        List<String> clientRoles = (List<String>) clientMap.get("roles");
+                        roles.addAll(clientRoles);
+                    }
+                }
+            }
+        }
+
         return UserContext.builder()
                 .userId(jwt.getSubject())
                 .username(jwt.getClaimAsString("preferred_username"))
@@ -116,6 +131,20 @@ public class JwtHeaderFilter extends OncePerRequestFilter {
                         @SuppressWarnings("unchecked")
                         List<String> realmRoles = (List<String>) realmAccess.get("roles");
                         roles.addAll(realmRoles);
+                    }
+                }
+
+                if (payload.get("resource_access") instanceof Map) {
+                    Map<?, ?> resourceAccess = (Map<?, ?>) payload.get("resource_access");
+                    for (Object client : resourceAccess.values()) {
+                        if (client instanceof Map) {
+                            Map<?, ?> clientMap = (Map<?, ?>) client;
+                            if (clientMap.get("roles") instanceof List) {
+                                @SuppressWarnings("unchecked")
+                                List<String> clientRoles = (List<String>) clientMap.get("roles");
+                                roles.addAll(clientRoles);
+                            }
+                        }
                     }
                 }
                 return UserContext.builder()

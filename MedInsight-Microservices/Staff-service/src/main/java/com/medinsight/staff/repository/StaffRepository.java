@@ -15,4 +15,6 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
     List<Staff> findByType(StaffType type);
 
     List<Staff> findByActif(Boolean actif);
+
+    Optional<Staff> findByKeycloakId(String keycloakId);
 }

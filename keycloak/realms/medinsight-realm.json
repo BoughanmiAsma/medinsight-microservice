@@ -5,40 +5,100 @@
   "accessTokenLifespan": 300,
   "ssoSessionIdleTimeout": 1800,
   "ssoSessionMaxLifespan": 36000,
-
   "roles": {
     "realm": [
-      { "name": "ROLE_ADMIN", "description": "Administrateur système" },
-      { "name": "ROLE_MEDECIN", "description": "Médecin" },
-      { "name": "ROLE_SECRETAIRE", "description": "Secrétaire médicale" },
-      { "name": "ROLE_INFIRMIER", "description": "Infirmier" },
-      { "name": "ROLE_TECHNICIEN", "description": "Technicien de laboratoire" },
-      { "name": "ROLE_AIDE_SOIGNANT", "description": "Aide-soignant" }
+      {
+        "name": "ROLE_ADMIN",
+        "description": "Administrateur système"
+      },
+      {
+        "name": "ROLE_MEDECIN",
+        "description": "Médecin"
+      },
+      {
+        "name": "ROLE_SECRETAIRE",
+        "description": "Secrétaire médicale"
+      },
+      {
+        "name": "ROLE_INFIRMIER",
+        "description": "Infirmier"
+      },
+      {
+        "name": "ROLE_TECHNICIEN",
+        "description": "Technicien de laboratoire"
+      },
+      {
+        "name": "ROLE_AIDE_SOIGNANT",
+        "description": "Aide-soignant"
+      },
+      {
+        "name": "ROLE_LABORATOIRE",
+        "description": "Personnel de laboratoire"
+      },
+      {
+        "name": "ROLE_PHARMACIEN",
+        "description": "Pharmacien"
+      }
     ],
     "client": {
       "staff-service": [
-        { "name": "staff:read", "description": "Lire les informations du personnel" },
-        { "name": "staff:write", "description": "Créer/modifier le personnel" },
-        { "name": "staff:delete", "description": "Supprimer un membre du personnel" }
+        {
+          "name": "staff:read",
+          "description": "Lire les informations du personnel"
+        },
+        {
+          "name": "staff:write",
+          "description": "Créer/modifier le personnel"
+        },
+        {
+          "name": "staff:delete",
+          "description": "Supprimer un membre du personnel"
+        }
       ],
       "dossier-service": [
-        { "name": "dossier:read", "description": "Consulter les dossiers patients" },
-        { "name": "dossier:write", "description": "Créer/modifier les dossiers" },
-        { "name": "dossier:delete", "description": "Supprimer des dossiers" }
+        {
+          "name": "dossier:read",
+          "description": "Consulter les dossiers patients"
+        },
+        {
+          "name": "dossier:write",
+          "description": "Créer/modifier les dossiers"
+        },
+        {
+          "name": "dossier:delete",
+          "description": "Supprimer des dossiers"
+        }
       ],
       "lab-service": [
-        { "name": "lab:read", "description": "Consulter les examens de laboratoire" },
-        { "name": "lab:write", "description": "Créer des demandes d'examen" },
-        { "name": "lab:view-results", "description": "Voir les résultats d'analyses" }
+        {
+          "name": "lab:read",
+          "description": "Consulter les examens de laboratoire"
+        },
+        {
+          "name": "lab:write",
+          "description": "Créer des demandes d'examen"
+        },
+        {
+          "name": "lab:view-results",
+          "description": "Voir les résultats d'analyses"
+        }
       ],
       "ordonnance-service": [
-        { "name": "ordonnance:read", "description": "Consulter les ordonnances" },
-        { "name": "ordonnance:write", "description": "Créer des ordonnances" },
-        { "name": "ordonnance:validate", "description": "Valider une ordonnance" }
+        {
+          "name": "ordonnance:read",
+          "description": "Consulter les ordonnances"
+        },
+        {
+          "name": "ordonnance:write",
+          "description": "Créer des ordonnances"
+        },
+        {
+          "name": "ordonnance:validate",
+          "description": "Valider une ordonnance"
+        }
       ]
     }
   },
-
   "clients": [
     {
       "clientId": "staff-service",
@@ -191,7 +251,6 @@
       ]
     }
   ],
-
   "users": [
     {
       "username": "admin1",
@@ -211,10 +270,26 @@
         "ROLE_ADMIN"
       ],
       "clientRoles": {
-        "staff-service": ["staff:read", "staff:write", "staff:delete"],
-        "dossier-service": ["dossier:read", "dossier:write", "dossier:delete"],
-        "lab-service": ["lab:read", "lab:write", "lab:view-results"],
-        "ordonnance-service": ["ordonnance:read", "ordonnance:write", "ordonnance:validate"]
+        "staff-service": [
+          "staff:read",
+          "staff:write",
+          "staff:delete"
+        ],
+        "dossier-service": [
+          "dossier:read",
+          "dossier:write",
+          "dossier:delete"
+        ],
+        "lab-service": [
+          "lab:read",
+          "lab:write",
+          "lab:view-results"
+        ],
+        "ordonnance-service": [
+          "ordonnance:read",
+          "ordonnance:write",
+          "ordonnance:validate"
+        ]
       }
     },
     {
@@ -235,9 +310,20 @@
         "ROLE_MEDECIN"
       ],
       "clientRoles": {
-        "dossier-service": ["dossier:read", "dossier:write"],
-        "lab-service": ["lab:read", "lab:write", "lab:view-results"],
-        "ordonnance-service": ["ordonnance:read", "ordonnance:write", "ordonnance:validate"]
+        "dossier-service": [
+          "dossier:read",
+          "dossier:write"
+        ],
+        "lab-service": [
+          "lab:read",
+          "lab:write",
+          "lab:view-results"
+        ],
+        "ordonnance-service": [
+          "ordonnance:read",
+          "ordonnance:write",
+          "ordonnance:validate"
+        ]
       }
     },
     {
@@ -258,8 +344,13 @@
         "ROLE_SECRETAIRE"
       ],
       "clientRoles": {
-        "staff-service": ["staff:read"],
-        "dossier-service": ["dossier:read", "dossier:write"]
+        "staff-service": [
+          "staff:read"
+        ],
+        "dossier-service": [
+          "dossier:read",
+          "dossier:write"
+        ]
       }
     },
     {
@@ -280,7 +371,11 @@
         "ROLE_TECHNICIEN"
       ],
       "clientRoles": {
-        "lab-service": ["lab:read", "lab:write", "lab:view-results"]
+        "lab-service": [
+          "lab:read",
+          "lab:write",
+          "lab:view-results"
+        ]
       }
     }
   ]

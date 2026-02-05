@@ -57,7 +57,7 @@ services:
 
   # ==================== MICROSERVICES ====================
   dossier-service:
-    build: 
+    build:
       context: ./dossier-service
       dockerfile: Dockerfile
     container_name: dossier-service
@@ -101,6 +101,8 @@ services:
     depends_on:
       - postgres
       - kafka
+    volumes:
+      - lab-uploads:/uploads
     networks:
       - medinsight-net
 
@@ -200,3 +202,4 @@ volumes:
   sonarqube_data:
   sonarqube_extensions:
   sonarqube_logs:
+  lab-uploads:

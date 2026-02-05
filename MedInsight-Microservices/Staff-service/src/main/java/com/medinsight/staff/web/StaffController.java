@@ -21,6 +21,11 @@ public class StaffController {
 
     private final StaffService staffService;
 
+    @GetMapping("/public/test")
+    public ResponseEntity<String> publicTest() {
+        return ResponseEntity.ok("Public access works!");
+    }
+
     @PostMapping
     public ResponseEntity<?> createStaff(@Valid @RequestBody StaffDTO staffDTO) {
         log.info("Requête POST: Création d'un nouveau staff");
@@ -52,6 +57,13 @@ public class StaffController {
     public ResponseEntity<StaffDTO> getStaffById(@PathVariable Long id) {
         log.info("Requête GET: Récupération du staff avec ID: {}", id);
         StaffDTO staff = staffService.getStaffById(id);
+        return ResponseEntity.ok(staff);
+    }
+
+    @GetMapping("/keycloak/{keycloakId}")
+    public ResponseEntity<StaffDTO> getStaffByKeycloakId(@PathVariable String keycloakId) {
+        log.info("Requête GET: Récupération du staff avec Keycloak ID: {}", keycloakId);
+        StaffDTO staff = staffService.getStaffByKeycloakId(keycloakId);
         return ResponseEntity.ok(staff);
     }
 

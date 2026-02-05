@@ -86,7 +86,10 @@ public class KeycloakUserService {
             return userId;
         } else {
             log.error("Échec de la création d'utilisateur. Status: {}", response.getStatusCode());
-            throw new RuntimeException("Keycloak user creation failed via REST");
+            if (response.hasBody()) {
+               log.error("Response body: {}", response.getBody());
+            }
+            throw new RuntimeException("Keycloak user creation failed via REST: " + response.getStatusCode());
         }
     }
 
@@ -107,6 +110,28 @@ public class KeycloakUserService {
 
         restTemplate.put(url, request);
         log.info("Utilisateur Keycloak {} mis à jour avec succès", keycloakId);
+    }
+
+    public void sendResetPasswordEmail(String userId) {
+        log.info("Demande d'envoi d'email de réinitialisation pour l'utilisateur: {}", userId);
+        String token = getAdminToken();
+        String url = serverUrl + "/admin/realms/" + realm + "/users/" + userId + "/execute-actions-email";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // Actions à effectuer : réinitialiser le mot de passe et vérifier l'email
+        List<String> actions = List.of("UPDATE_PASSWORD", "VERIFY_EMAIL");
+
+        HttpEntity<List<String>> request = new HttpEntity<>(actions, headers);
+
+        try {
+            restTemplate.exchange(url, HttpMethod.PUT, request, Void.class);
+            log.info("Email de réinitialisation envoyé avec succès via REST (PUT)");
+        } catch (Exception e) {
+            log.error("Erreur lors de l'envoi de l'email Keycloak: {}", e.getMessage());
+        }
     }
 
     public void assignRealmRoleToUser(String userId, String roleName) {

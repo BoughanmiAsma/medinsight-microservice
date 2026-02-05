@@ -1,0 +1,195 @@
+@startuml Ajout d'un nouveau Staff
+' Diagramme de séquence - Ajout d'un nouveau membre du personnel
+
+title Diagramme de Séquence : Ajout d'un Nouveau Staff\navec envoi d'email de réinitialisation de mot de passe
+
+skinparam backgroundColor #FEFEFE
+skinparam roundcorner 10
+skinparam shadowing false
+
+skinparam participant {
+    BackgroundColor<<Frontend>> #E3F2FD
+    BorderColor<<Frontend>> #1976D2
+    BackgroundColor<<Gateway>> #FFF3E0
+    BorderColor<<Gateway>> #F57C00
+    BackgroundColor<<Auth>> #F3E5F5
+    BorderColor<<Auth>> #7B1FA2
+    BackgroundColor<<Service>> #E8F5E9
+    BorderColor<<Service>> #388E3C
+    BackgroundColor<<Database>> #FCE4EC
+    BorderColor<<Database>> #C2185B
+}
+
+skinparam sequence {
+    ArrowColor #455A64
+    LifeLineBorderColor #455A64
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #455A64
+    ActorBorderColor #455A64
+    BoxBorderColor #90A4AE
+}
+
+actor "Admin" as admin <<Human>>
+participant "Frontend\n(React)" as frontend <<Frontend>>
+participant "Kong\n(API Gateway)" as kong <<Gateway>>
+participant "Keycloak\n(Auth Server)" as keycloak <<Auth>>
+participant "Staff Service\n(Spring Boot)" as staffService <<Service>>
+database "MySQL\n(staff DB)" as mysql <<Database>>
+participant "Email Service\n(Keycloak SMTP)" as email <<Service>>
+
+== Phase 1: Authentification Admin ==
+
+admin -> frontend: Clique sur "Ajouter Personnel"
+activate frontend
+
+frontend -> frontend: Affiche formulaire\navec champs:\n- Nom, Prénom\n- Email, Téléphone\n- Type (MEDECIN, PHARMACIE, etc.)
+
+admin -> frontend: Remplit le formulaire\net soumet
+frontend -> frontend: Valide les données\n(format email, champs requis)
+
+== Phase 2: Envoi de la Requête ==
+
+frontend -> kong: POST /staff\nHeaders:\n- Authorization: Bearer <JWT_TOKEN>\nBody:\n- nom, prenom, email\n- telephone, type, specialite
+activate kong
+note right of frontend
+  Le token JWT contient:
+  - User ID
+  - Rôles (ROLE_ADMIN)
+  - Email de l'admin
+end note
+
+kong -> kong: Vérifie le token JWT
+note right of kong
+  Kong extrait:
+  1. exp (expiration)
+  2. iss (issuer)
+  3. Validité de la signature
+end note
+
+alt Token invalide ou expiré
+    kong --> frontend: ❌ 401 Unauthorized
+    frontend --> admin: Erreur: "Session expirée"
+    admin -> frontend: Se reconnecte
+else Token valide
+    
+    == Phase 3: Traitement par Staff Service ==
+    
+    kong -> staffService: POST /staff\nHeaders:\n- X-User-Id: <userId>\n- X-User-Roles: ROLE_ADMIN\nBody: {...}
+    activate staffService
+    
+    staffService -> staffService: Vérifie permission\n(hasRole("staff:write"))
+    
+    alt Permission refusée
+        staffService --> kong: ❌ 403 Forbidden
+        kong --> frontend: ❌ 403 Forbidden
+        frontend --> admin: Erreur: "Accès refusé"
+    else Permission accordée
+        
+        == Phase 4: Vérification Unicité ==
+        
+        staffService -> mysql: SELECT * FROM staff\nWHERE email = ?
+        activate mysql
+        
+        alt Email existe déjà
+            mysql --> staffService: Staff trouvé
+            staffService --> kong: ❌ 400 Bad Request\n{"error": "Email existe déjà"}
+            kong --> frontend: ❌ 400 Bad Request
+            frontend --> admin: Erreur:\n"Un staff avec cet email existe déjà"
+        else Email disponible
+            mysql --> staffService: Aucun résultat
+            deactivate mysql
+            
+            == Phase 5: Création dans Keycloak ==
+            
+            staffService -> keycloak: POST /admin/realms/{realm}/users\nBody:\n{\n  "username": "email@domain.com",\n  "email": "email@domain.com",\n  "firstName": "Prénom",\n  "lastName": "Nom",\n  "enabled": true,\n  "emailVerified": true\n}
+            activate keycloak
+            
+            keycloak -> keycloak: Crée l'utilisateur\ndans le realm
+            keycloak --> staffService: ✅ 201 Created\nLocation: /users/{userId}
+            note right of keycloak
+              Keycloak génère:
+              - UUID utilisateur
+              - Credentials vides
+            end note
+            
+            staffService -> staffService: Extrait Keycloak User ID\nde la réponse (kcId)
+            
+            == Phase 6: Attribution du Rôle ==
+            
+            staffService -> staffService: Détermine le rôle\nselon le type:\n- MEDECIN → ROLE_MEDECIN\n- PHARMACIE → ROLE_PHARMACIE\n- etc.
+            
+            staffService -> keycloak: GET /admin/realms/{realm}/roles/{roleName}
+            keycloak --> staffService: ✅ Détails du rôle\n{"id": "...", "name": "ROLE_..."}
+            
+            staffService -> keycloak: POST /admin/realms/{realm}/users/{kcId}/role-mappings/realm\nBody: [{"id": "...", "name": "ROLE_..."}]
+            keycloak -> keycloak: Assigne le rôle\nà l'utilisateur
+            keycloak --> staffService: ✅ 204 No Content
+            
+            == Phase 7: Envoi Email de Réinitialisation ==
+            
+            staffService -> keycloak: PUT /admin/realms/{realm}/users/{kcId}/execute-actions-email\nBody: ["UPDATE_PASSWORD"]
+            
+            keycloak -> keycloak: Génère un lien\nde réinitialisation\n(token temporaire)
+            
+            keycloak -> email: Envoie email à\n{email}
+            activate email
+            note right of email
+              Email contient:
+              - Lien de réinitialisation
+              - Expire dans 24h
+              - Instructions
+            end note
+            
+            email --> admin: 📧 Email envoyé\n"Créez votre mot de passe"
+            note left of admin
+              Le nouveau staff reçoit:
+              "Bienvenue dans MedInsight
+              Cliquez ici pour définir
+              votre mot de passe"
+            end note
+            deactivate email
+            
+            keycloak --> staffService: ✅ 200 OK
+            deactivate keycloak
+            
+            == Phase 8: Sauvegarde en Base de Données ==
+            
+            staffService -> mysql: INSERT INTO staff\n(nom, prenom, email, telephone,\ntype, specialite, keycloak_id)\nVALUES (?, ?, ?, ?, ?, ?, ?)
+            activate mysql
+            
+            mysql -> mysql: Génère ID auto-incrémenté
+            mysql --> staffService: ✅ Staff créé\nID: {staffId}
+            deactivate mysql
+            
+            == Phase 9: Réponse au Frontend ==
+            
+            staffService -> staffService: Construit StaffDTO\navec toutes les infos
+            
+            staffService --> kong: ✅ 201 Created\nBody:\n{\n  "id": {staffId},\n  "nom": "...",\n  "prenom": "...",\n  "email": "...",\n  "type": "...",\n  "keycloakId": "{kcId}"\n}
+            deactivate staffService
+            
+            kong --> frontend: ✅ 201 Created\nBody: {...}
+            deactivate kong
+            
+            frontend -> frontend: Invalide le cache\n(react-query)
+            frontend -> frontend: Actualise la liste\ndes staffs
+            
+            frontend --> admin: ✅ Succès!\n"Staff ajouté avec succès.\nEmail de création envoyé."
+            deactivate frontend
+            
+        end
+    end
+end
+
+== Phase 10: Activation par le Nouveau Staff ==
+
+note over admin, email
+  **Workflow côté nouveau staff:**
+  1. Reçoit l'email
+  2. Clique sur le lien de réinitialisation
+  3. Redirigé vers Keycloak
+  4. Définit son mot de passe
+  5. Peut se connecter à MedInsight
+end note
+
+@enduml
